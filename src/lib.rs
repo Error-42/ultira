@@ -32,11 +32,3 @@ pub fn rating_change(
         [team_ratings[0] - delta, team_ratings[1] - delta],
     )
 }
-
-pub fn add_user(path: &Path, name: &str, rating: f64) -> Result<(), Box<dyn Error>> {
-    todo!()
-}
-
-pub fn play(path: &Path, alone_player: &str, team_players: [&str; 2], points: f64) {
-    todo!()
-}
