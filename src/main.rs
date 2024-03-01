@@ -50,7 +50,7 @@ fn play(path: &Path, play: Play) {
         (&play.team_player_1, past_team[0], new_team[0]),
         (&play.team_player_2, past_team[1], new_team[1]),
     ] {
-        println!("{name}: {past} -> {new}");
+        println!("{name}: {past:.0} -> {new:.0}");
     }
 
     *data.ratings.get_mut(&play.alone_player).unwrap() = new_alone;
