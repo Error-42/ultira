@@ -18,7 +18,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            k: 1.0,
+            k: 10.0,
             spread: 100.0,
             default_rating: Some(1000.0),
         }
