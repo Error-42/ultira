@@ -20,9 +20,9 @@ enum Command {
     /// Create or clear the file
     #[command(alias = "n")]
     New,
-    /// Add a new user; if the user already exists, their rating will be overriden.
+    /// Add a new player; if the player already exists, their rating will be overriden.
     #[command(alias = "a")]
-    AddUser(AddUser),
+    AddPlayer(AddPlayer),
 }
 
 #[derive(Debug, Parser)]
@@ -39,10 +39,10 @@ struct Play {
 }
 
 #[derive(Debug, Parser)]
-struct AddUser {
-    /// The name of the new user
-    user: String,
-    /// The rating of the new user
+struct AddPlayer {
+    /// The name of the new player
+    player: String,
+    /// The rating of the new player
     rating: Option<f64>,
 }
 
@@ -77,14 +77,14 @@ fn new(path: &Path) {
     ultira::write_data(path, &Default::default()).unwrap();
 }
 
-fn add_user(path: &Path, param: AddUser) {
+fn add_player(path: &Path, param: AddPlayer) {
     let mut data = ultira::read_data(path).unwrap();
     let rating = param
         .rating
         .or(data.config.default_rating)
         .expect("No default rating provided in file, so a rating must be provided");
 
-    data.ratings.insert(param.user, rating);
+    data.ratings.insert(param.player, rating);
 
     ultira::write_data(path, &data).unwrap();
 }
@@ -95,6 +95,6 @@ fn main() {
     match args.command {
         Command::Play(p) => play(&args.file, p),
         Command::New => new(&args.file),
-        Command::AddUser(p) => add_user(&args.file, p),
+        Command::AddPlayer(p) => add_player(&args.file, p),
     }
 }
