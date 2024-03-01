@@ -1,7 +1,4 @@
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -66,7 +63,9 @@ fn new(path: &Path) {
 
 fn add_user(path: &Path, param: AddUser) {
     let mut data = ultira::read_data(path).unwrap();
-    let rating = param.rating.or(data.config.default_rating)
+    let rating = param
+        .rating
+        .or(data.config.default_rating)
         .expect("No default rating provided in file, so a rating must be provided");
 
     data.ratings.insert(param.user, rating);
