@@ -28,7 +28,7 @@ pub fn rating_change(
     let delta = config.k * (points - alone_expected);
 
     (
-        alone_rating + delta,
+        alone_rating + delta * 2.0,
         [team_ratings[0] - delta, team_ratings[1] - delta],
     )
 }
