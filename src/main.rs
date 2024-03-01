@@ -23,6 +23,9 @@ enum Command {
     /// Add a new player; if the player already exists, their rating will be overriden.
     #[command(alias = "a")]
     AddPlayer(AddPlayer),
+    /// Print the ratings of the players
+    #[command(alias = "r")]
+    Ratings,
 }
 
 #[derive(Debug, Parser)]
@@ -89,6 +92,21 @@ fn add_player(path: &Path, param: AddPlayer) {
     ultira::write_data(path, &data).unwrap();
 }
 
+fn ratings(path: &Path) {
+    let data = ultira::read_data(path).unwrap();
+
+    let mut ratings: Vec<(&String, &f64)> = data
+        .ratings
+        .iter()
+        .collect();
+    
+    ratings.sort_unstable_by_key(|(player, _rating)| *player);
+    
+    for (player, rating) in ratings {
+        println!("{player}: {rating:.0}");
+    }
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
@@ -96,5 +114,6 @@ fn main() {
         Command::Play(p) => play(&args.file, p),
         Command::New => new(&args.file),
         Command::AddPlayer(p) => add_player(&args.file, p),
+        Command::Ratings => ratings(&args.file),
     }
 }
