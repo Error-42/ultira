@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 struct Cli {
-    data: PathBuf,
+    file: PathBuf,
     #[command(subcommand)]
     command: Command,
 }
@@ -15,6 +15,8 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     Play(Play),
+    New,
+    AddUser(AddUser),
 }
 
 #[derive(Debug, Parser)]
@@ -23,6 +25,12 @@ struct Play {
     team_player_1: String,
     team_player_2: String,
     points: f64,
+}
+
+#[derive(Debug, Parser)]
+struct AddUser {
+    user: String,
+    rating: Option<f64>,
 }
 
 fn play(path: &Path, play: Play) {
@@ -52,13 +60,26 @@ fn play(path: &Path, play: Play) {
     ultira::write_data(path, &data).unwrap();
 }
 
+fn new(path: &Path) {
+    ultira::write_data(path, &Default::default()).unwrap();
+}
+
+fn add_user(path: &Path, param: AddUser) {
+    let mut data = ultira::read_data(path).unwrap();
+    let rating = param.rating.or(data.config.default_rating)
+        .expect("No default rating provided in file, so a rating must be provided");
+
+    data.ratings.insert(param.user, rating);
+
+    ultira::write_data(path, &data).unwrap();
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
     match args.command {
-        Command::Play(p) => play(&args.data, p),
+        Command::Play(p) => play(&args.file, p),
+        Command::New => new(&args.file),
+        Command::AddUser(p) => add_user(&args.file, p),
     }
-
-    // let data = ultira::read_data(&PathBuf::from_str("test/a.toml").unwrap()).unwrap();
-    // ultira::write_data(&PathBuf::from_str("test/b.toml").unwrap(), data).unwrap();
 }
