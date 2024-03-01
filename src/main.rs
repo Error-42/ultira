@@ -11,7 +11,9 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    #[command(alias = "p")]
     Play(Play),
+    #[command(alias = "n")]
     New,
     AddUser(AddUser),
 }
@@ -21,6 +23,7 @@ struct Play {
     alone_player: String,
     team_player_1: String,
     team_player_2: String,
+    #[arg(allow_hyphen_values = true)]
     points: f64,
 }
 
