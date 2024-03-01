@@ -2,9 +2,11 @@ use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
+/// Ulti rating calculator
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
+    /// File containing the data
     file: PathBuf,
     #[command(subcommand)]
     command: Command,
@@ -12,26 +14,35 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Evaluate rating changes after a game
     #[command(alias = "p")]
     Play(Play),
+    /// Create or clear the file
     #[command(alias = "n")]
     New,
+    /// Add a new user; if the user already exists, their rating will be overriden.
     #[command(alias = "a")]
     AddUser(AddUser),
 }
 
 #[derive(Debug, Parser)]
 struct Play {
+    /// The name of the player trying to complete the bet
     alone_player: String,
+    /// The name of the first player working against the bet
     team_player_1: String,
+    /// The name of the second player working against the bet
     team_player_2: String,
+    /// The amount of points the bet is worth; positive if the bet was completed, negative otherwise
     #[arg(allow_hyphen_values = true)]
     points: f64,
 }
 
 #[derive(Debug, Parser)]
 struct AddUser {
+    /// The name of the new user
     user: String,
+    /// The rating of the new user
     rating: Option<f64>,
 }
 
