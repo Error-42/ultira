@@ -15,6 +15,7 @@ enum Command {
     Play(Play),
     #[command(alias = "n")]
     New,
+    #[command(alias = "a")]
     AddUser(AddUser),
 }
 
