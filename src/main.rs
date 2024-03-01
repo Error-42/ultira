@@ -1,4 +1,7 @@
-use std::{path::{Path, PathBuf}, str::FromStr};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use clap::{Parser, Subcommand};
 
@@ -26,9 +29,13 @@ fn play(path: &Path, play: Play) {
     let mut data = ultira::read_data(path).unwrap();
 
     let past_alone = data.ratings[&play.alone_player];
-    let past_team = [data.ratings[&play.team_player_1], data.ratings[&play.team_player_2]];
+    let past_team = [
+        data.ratings[&play.team_player_1],
+        data.ratings[&play.team_player_2],
+    ];
 
-    let (new_alone, new_team) = ultira::rating_change(&data.config, past_alone, &past_team, play.points);
+    let (new_alone, new_team) =
+        ultira::rating_change(&data.config, past_alone, &past_team, play.points);
 
     for (name, past, new) in [
         (&play.alone_player, past_alone, new_alone),

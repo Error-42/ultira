@@ -6,7 +6,7 @@ use data::*;
 
 pub fn read_data(path: &Path) -> Result<Data, Box<dyn Error>> {
     let data = fs::read_to_string(path)?;
-    
+
     Ok(toml::from_str(&data)?)
 }
 
@@ -27,7 +27,10 @@ pub fn rating_change(
     let alone_expected = (alone_rating - team_rating) / config.spread;
     let delta = config.k * (points - alone_expected);
 
-    (alone_rating + delta, [team_ratings[0] - delta, team_ratings[1] - delta])
+    (
+        alone_rating + delta,
+        [team_ratings[0] - delta, team_ratings[1] - delta],
+    )
 }
 
 pub fn add_user(path: &Path, name: &str, rating: f64) -> Result<(), Box<dyn Error>> {

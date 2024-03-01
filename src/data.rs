@@ -16,6 +16,9 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { k: 1.0, spread: 100.0 }
+        Self {
+            k: 1.0,
+            spread: 100.0,
+        }
     }
 }
