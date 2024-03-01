@@ -15,16 +15,16 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Evaluate rating changes after a game
-    #[command(alias = "p")]
+    #[command(visible_alias = "p")]
     Play(Play),
     /// Create or clear the file
-    #[command(alias = "n")]
+    #[command(visible_alias = "n")]
     New,
     /// Add a new player; if the player already exists, their rating will be overriden.
-    #[command(alias = "a")]
+    #[command(visible_alias = "a")]
     AddPlayer(AddPlayer),
     /// Print the ratings of the players
-    #[command(alias = "r")]
+    #[command(visible_alias = "r")]
     Ratings,
 }
 
