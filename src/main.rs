@@ -30,15 +30,16 @@ enum Command {
 
 #[derive(Debug, Parser)]
 struct Play {
-    /// The name of the player trying to complete the bet
-    alone_player: String,
-    /// The name of the first player working against the bet
-    team_player_1: String,
-    /// The name of the second player working against the bet
-    team_player_2: String,
-    /// The amount of points the bet is worth; positive if the bet was completed, negative otherwise
+    games: usize,
+    player_1: String,
     #[arg(allow_hyphen_values = true)]
-    points: f64,
+    score_1: f64,
+    player_2: String,
+    #[arg(allow_hyphen_values = true)]
+    score_2: f64,
+    player_3: String,
+    #[arg(allow_hyphen_values = true)]
+    score_3: f64,
 }
 
 #[derive(Debug, Parser)]
@@ -52,26 +53,21 @@ struct AddPlayer {
 fn play(path: &Path, play: Play) {
     let mut data = ultira::read_data(path).unwrap();
 
-    let past_alone = data.ratings[&play.alone_player];
-    let past_team = [
-        data.ratings[&play.team_player_1],
-        data.ratings[&play.team_player_2],
-    ];
+    let players = [play.player_1, play.player_2, play.player_3];
+    let scores = [play.score_1, play.score_2, play.score_3];
 
-    let (new_alone, new_team) =
-        ultira::rating_change(&data.config, past_alone, &past_team, play.points);
+    let mut ratings = [0.0; 3];
 
-    for (name, past, new) in [
-        (&play.alone_player, past_alone, new_alone),
-        (&play.team_player_1, past_team[0], new_team[0]),
-        (&play.team_player_2, past_team[1], new_team[1]),
-    ] {
-        println!("{name}: {past:.0} -> {new:.0}");
+    for i in 0..3 {
+        ratings[i] = data.ratings[&players[i]];
     }
 
-    *data.ratings.get_mut(&play.alone_player).unwrap() = new_alone;
-    *data.ratings.get_mut(&play.team_player_1).unwrap() = new_team[0];
-    *data.ratings.get_mut(&play.team_player_2).unwrap() = new_team[1];
+    let new_ratings = ultira::rating_change(&data.config, play.games, ratings, scores);
+
+    for i in 0..3 {
+        println!("{}: {:.0} -> {:.0}", players[i], ratings[i], new_ratings[i]);
+        *data.ratings.get_mut(&players[i]).unwrap() = new_ratings[i];
+    }
 
     ultira::write_data(path, &data).unwrap();
 }

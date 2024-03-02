@@ -10,17 +10,17 @@ pub struct Data {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
-    pub k: f64,
-    pub spread: f64,
+    pub score_multiplier: f64,
+    pub realloc: f64,
     pub default_rating: Option<f64>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            k: 10.0,
-            spread: 100.0,
-            default_rating: Some(1000.0),
+            score_multiplier: 1.0,
+            realloc: 0.01,
+            default_rating: Some(100.0),
         }
     }
 }
