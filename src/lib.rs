@@ -37,7 +37,8 @@ pub fn rating_change(
         let ρ = config.realloc;
         let σ = config.score_multiplier;
 
-        new_ratings[i] = (1.0 - ρ).powi(g) * r_i + (r_avg + σ / ρ * s_i_avg) * (1.0 - (1.0 - ρ).powi(g));
+        new_ratings[i] =
+            (1.0 - ρ).powi(g) * r_i + (r_avg + σ / ρ * s_i_avg) * (1.0 - (1.0 - ρ).powi(g));
 
         assert!(new_ratings[i].is_finite());
 

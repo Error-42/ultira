@@ -53,10 +53,7 @@ struct AddPlayer {
 }
 
 #[derive(Debug, Parser)]
-#[command(
-    subcommand_help_heading = "Params",
-    subcommand_value_name = "PARAM"
-)]
+#[command(subcommand_help_heading = "Params", subcommand_value_name = "PARAM")]
 struct Adjust {
     #[command(subcommand)]
     param: Param,
@@ -65,11 +62,9 @@ struct Adjust {
 #[derive(Debug, Subcommand)]
 enum Param {
     /// Controls how agressively ratings points are redistruted.
-    /// 
+    ///
     /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
-    Realloc {
-        new_value: f64,
-    }
+    Realloc { new_value: f64 },
 }
 
 fn play(path: &Path, play: Play) {
@@ -113,13 +108,10 @@ fn add_player(path: &Path, param: AddPlayer) {
 fn ratings(path: &Path) {
     let data = ultira::read_data(path).unwrap();
 
-    let mut ratings: Vec<(&String, &f64)> = data
-        .ratings
-        .iter()
-        .collect();
-    
+    let mut ratings: Vec<(&String, &f64)> = data.ratings.iter().collect();
+
     ratings.sort_unstable_by_key(|(player, _rating)| *player);
-    
+
     for (player, rating) in ratings {
         println!("{player}: {rating:.1}");
     }
