@@ -65,7 +65,7 @@ fn play(path: &Path, play: Play) {
     let new_ratings = ultira::rating_change(&data.config, play.games, ratings, scores);
 
     for i in 0..3 {
-        println!("{}: {:.0} -> {:.0}", players[i], ratings[i], new_ratings[i]);
+        println!("{}: {:.1} -> {:.1}", players[i], ratings[i], new_ratings[i]);
         *data.ratings.get_mut(&players[i]).unwrap() = new_ratings[i];
     }
 
@@ -99,7 +99,7 @@ fn ratings(path: &Path) {
     ratings.sort_unstable_by_key(|(player, _rating)| *player);
     
     for (player, rating) in ratings {
-        println!("{player}: {rating:.0}");
+        println!("{player}: {rating:.1}");
     }
 }
 
