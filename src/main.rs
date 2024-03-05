@@ -95,10 +95,7 @@ fn new(path: &Path) {
 
 fn add_player(path: &Path, param: AddPlayer) {
     let mut data = ultira::read_data(path).unwrap();
-    let rating = param
-        .rating
-        .or(data.config.default_rating)
-        .expect("No default rating provided in file, so a rating must be provided");
+    let rating = param.rating.unwrap_or(data.config.default_rating);
 
     data.ratings.insert(param.player, rating);
 
