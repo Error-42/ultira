@@ -19,7 +19,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             score_multiplier: 1.0,
-            realloc: 0.01,
+            realloc: 0.02,
             default_rating: Some(100.0),
         }
     }
