@@ -21,11 +21,13 @@ enum Command {
     #[command(visible_alias = "n")]
     New,
     /// Add a new player; if the player already exists, their rating will be overriden.
-    #[command(visible_alias = "a")]
+    #[command(visible_alias = "add")]
     AddPlayer(AddPlayer),
     /// Print the ratings of the players
     #[command(visible_alias = "r")]
     Ratings,
+    /// Adjust settings with rating corrections
+    Adjust(Adjust),
 }
 
 #[derive(Debug, Parser)]
@@ -48,6 +50,26 @@ struct AddPlayer {
     player: String,
     /// The rating of the new player
     rating: Option<f64>,
+}
+
+#[derive(Debug, Parser)]
+#[command(
+    subcommand_help_heading = "Params",
+    subcommand_value_name = "PARAM"
+)]
+struct Adjust {
+    #[command(subcommand)]
+    param: Param,
+}
+
+#[derive(Debug, Subcommand)]
+enum Param {
+    /// Controls how agressively ratings points are redistruted.
+    /// 
+    /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
+    Realloc {
+        new_value: f64,
+    }
 }
 
 fn play(path: &Path, play: Play) {
@@ -103,6 +125,10 @@ fn ratings(path: &Path) {
     }
 }
 
+fn adjust(_path: &Path, _param: Param) {
+    todo!()
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
@@ -111,5 +137,6 @@ fn main() {
         Command::New => new(&args.file),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
+        Command::Adjust(a) => adjust(&args.file, a.param),
     }
 }
