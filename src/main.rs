@@ -114,8 +114,27 @@ fn ratings(path: &Path) {
     }
 }
 
-fn adjust(_path: &Path, _param: Param) {
-    todo!()
+fn adjust(path: &Path, param: Param) {
+    let mut data = ultira::read_data(path).unwrap();
+    
+    match param {
+        Param::Realloc { new_value } => adjust_realloc(&mut data, new_value),
+    }
+
+    ultira::write_data(path, &data).unwrap();
+}
+
+fn adjust_realloc(data: &mut ultira::data::Data, new_value: f64) {
+    let factor = new_value / data.config.realloc;
+    let default_rating = data.config.default_rating;
+
+    for (_player, rating) in data.ratings.iter_mut() {
+        *rating = (*rating - default_rating) / factor + default_rating;
+
+        assert!(rating.is_finite());
+    }
+
+    data.config.realloc = new_value;
 }
 
 fn main() {
