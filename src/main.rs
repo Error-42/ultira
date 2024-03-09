@@ -66,26 +66,43 @@ enum Param {
     /// Controls how agressively ratings points are redistruted.
     ///
     /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
-    Realloc { new_value: f64 },
+    Spread { new_value: f64 },
 }
 
 fn play(path: &Path, play: Play) {
     let mut data = ultira::read_data(path).unwrap();
 
-    let players = [play.player_1, play.player_2, play.player_3];
-    let scores = [play.score_1, play.score_2, play.score_3];
+    let play = ultira::Play {
+        game_count: play.games,
+        outcomes: [
+            ultira::Outcome {
+                player: play.player_1,
+                points: play.score_1,
+            },
+            ultira::Outcome {
+                player: play.player_2,
+                points: play.score_2,
+            },
+            ultira::Outcome {
+                player: play.player_3,
+                points: play.score_3,
+            }
+        ]
+    };
 
-    let mut ratings = [0.0; 3];
+    let eval_before = data.evaluate();
 
-    for i in 0..3 {
-        ratings[i] = data.ratings[&players[i]];
-    }
+    data.play(play.clone());
 
-    let new_ratings = ultira::rating_change(&data.config, play.games, ratings, scores);
+    let eval_after = data.evaluate();
 
-    for i in 0..3 {
-        println!("{}: {:.1} -> {:.1}", players[i], ratings[i], new_ratings[i]);
-        *data.ratings.get_mut(&players[i]).unwrap() = new_ratings[i];
+    for ultira::Outcome{ player, points: _ } in play.outcomes {
+        println!(
+            "{}: {:.1} -> {:.1}",
+            player,
+            data.config.rating_to_display(eval_before.ratings[&player]),
+            data.config.rating_to_display(eval_after.ratings[&player]),
+        );
     }
 
     ultira::write_data(path, &data).unwrap();
@@ -99,7 +116,7 @@ fn add_player(path: &Path, param: AddPlayer) {
     let mut data = ultira::read_data(path).unwrap();
     let rating = param.rating.unwrap_or(data.config.default_rating);
 
-    data.ratings.insert(param.player, rating);
+    data.add_player_display(param.player, rating);
 
     ultira::write_data(path, &data).unwrap();
 }
@@ -107,12 +124,17 @@ fn add_player(path: &Path, param: AddPlayer) {
 fn ratings(path: &Path) {
     let data = ultira::read_data(path).unwrap();
 
-    let mut ratings: Vec<(&String, &f64)> = data.ratings.iter().collect();
+    let mut ratings: Vec<(String, f64)> = data.evaluate().ratings.into_iter().collect();
 
-    ratings.sort_unstable_by_key(|(player, _rating)| *player);
+    // Clone is probably avoidable, but I'm lazy.
+    ratings.sort_unstable_by_key(|(player, _rating)| player.clone());
 
     for (player, rating) in ratings {
-        println!("{player}: {rating:.1}");
+        println!(
+            "{}: {:.1}",
+            player,
+            data.config.rating_to_display(rating),
+        );
     }
 }
 
@@ -120,23 +142,14 @@ fn adjust(path: &Path, param: Param) {
     let mut data = ultira::read_data(path).unwrap();
     
     match param {
-        Param::Realloc { new_value } => adjust_realloc(&mut data, new_value),
+        Param::Spread { new_value } => adjust_spread(&mut data, new_value),
     }
 
     ultira::write_data(path, &data).unwrap();
 }
 
-fn adjust_realloc(data: &mut ultira::data::Data, new_value: f64) {
-    let factor = new_value / data.config.realloc;
-    let default_rating = data.config.default_rating;
-
-    for (_player, rating) in data.ratings.iter_mut() {
-        *rating = (*rating - default_rating) / factor + default_rating;
-
-        assert!(rating.is_finite());
-    }
-
-    data.config.realloc = new_value;
+fn adjust_spread(data: &mut ultira::Data, new_value: f64) {
+    data.config.spread = new_value;
 }
 
 fn log_command(path: &Path) {
