@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{env, fs, path::{Path, PathBuf}};
 
 use clap::{Parser, Subcommand};
 
@@ -137,8 +137,20 @@ fn adjust_realloc(data: &mut ultira::data::Data, new_value: f64) {
     data.config.realloc = new_value;
 }
 
+fn log_command(path: &Path) {
+    let args = env::args();
+
+    let mut file = fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(path);
+}
+
 fn main() {
     let args: Cli = Cli::parse();
+
+    // We only log the command if it was valid.
+    // log_command(&args.file.file_stem().unwrap().);    
 
     match args.command {
         Command::Play(p) => play(&args.file, p),
