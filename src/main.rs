@@ -66,7 +66,11 @@ enum Param {
     /// Controls how agressively ratings points are redistruted.
     ///
     /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
+    #[command(visible_alias = "σ")]
     Spread { new_value: f64 },
+    /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
+    #[command(visible_alias = "μ")]
+    ScoreMultiplier { new_value: f64 },
 }
 
 fn play(path: &Path, play: Play) {
@@ -142,14 +146,11 @@ fn adjust(path: &Path, param: Param) {
     let mut data = ultira::read_data(path).unwrap();
     
     match param {
-        Param::Spread { new_value } => adjust_spread(&mut data, new_value),
+        Param::Spread { new_value } => data.config.spread = new_value,
+        Param::ScoreMultiplier { new_value } => data.adjust_score_multiplier(new_value),
     }
 
     ultira::write_data(path, &data).unwrap();
-}
-
-fn adjust_spread(data: &mut ultira::Data, new_value: f64) {
-    data.config.spread = new_value;
 }
 
 fn log_command(path: &Path) {
