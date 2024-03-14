@@ -1,3 +1,5 @@
+#![allow(confusable_idents, mixed_script_confusables)]
+
 use std::{
     io,
     path::{Path, PathBuf},
@@ -82,10 +84,10 @@ enum Param {
     ///
     /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
     #[command(visible_alias = "σ")]
-    Spread { new_value: f64 },
+    Spread { new_value: Option<f64> },
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
     #[command(visible_alias = "μ")]
-    ScoreMultiplier { new_value: f64 },
+    ScoreMultiplier { new_value: Option<f64> },
     /// Adjusting the base rating will increase ratings by the difference between the new and old one.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
@@ -171,8 +173,16 @@ fn adjust(path: &Path, param: Param) {
     let mut data = read_data(path);
 
     match param {
-        Param::Spread { new_value } => data.config.spread = new_value,
-        Param::ScoreMultiplier { new_value } => data.adjust_score_multiplier(new_value),
+        Param::Spread { new_value: None } => println!("{}", data.config.spread),
+        Param::Spread {
+            new_value: Some(val),
+        } => data.config.spread = val,
+        Param::ScoreMultiplier { new_value: None } => {
+            println!("{}", data.config.α_to_display(data.evaluate().α))
+        }
+        Param::ScoreMultiplier {
+            new_value: Some(val),
+        } => data.adjust_score_multiplier(val),
         Param::BaseRating { new_value: None } => println!("{}", data.config.base_rating),
         Param::BaseRating {
             new_value: Some(val),
