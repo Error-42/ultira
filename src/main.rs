@@ -1,6 +1,7 @@
 use std::{
     io,
     path::{Path, PathBuf},
+    process,
 };
 
 use clap::{Parser, Subcommand};
@@ -91,7 +92,7 @@ enum Param {
 }
 
 fn play(path: &Path, play: Play) {
-    let mut data = ultira::read_data(path).unwrap();
+    let mut data = read_data(path);
 
     let play = ultira::Play {
         game_count: play.games,
@@ -145,7 +146,7 @@ fn new(path: &Path, param: New) {
 }
 
 fn add_player(path: &Path, param: AddPlayer) {
-    let mut data = ultira::read_data(path).unwrap();
+    let mut data = read_data(path);
     let rating = param.rating.unwrap_or(data.config.base_rating);
 
     data.add_player_display(param.player, rating);
@@ -154,7 +155,7 @@ fn add_player(path: &Path, param: AddPlayer) {
 }
 
 fn ratings(path: &Path) {
-    let data = ultira::read_data(path).unwrap();
+    let data = read_data(path);
 
     let mut ratings: Vec<(String, f64)> = data.evaluate().ratings.into_iter().collect();
 
@@ -167,7 +168,7 @@ fn ratings(path: &Path) {
 }
 
 fn adjust(path: &Path, param: Param) {
-    let mut data = ultira::read_data(path).unwrap();
+    let mut data = read_data(path);
 
     match param {
         Param::Spread { new_value } => data.config.spread = new_value,
@@ -182,7 +183,7 @@ fn adjust(path: &Path, param: Param) {
 }
 
 fn undo(path: &Path) {
-    let mut data = ultira::read_data(path).unwrap();
+    let mut data = read_data(path);
 
     data.history.pop();
 
@@ -199,6 +200,16 @@ fn main() {
         Command::Ratings => ratings(&args.file),
         Command::Adjust(a) => adjust(&args.file, a.param),
         Command::Undo => undo(&args.file),
+    }
+}
+
+fn read_data(path: &Path) -> ultira::Data {
+    match ultira::read_data(path) {
+        Ok(data) => data,
+        Err(err) => {
+            eprintln!("{err}");
+            process::exit(1);
+        }
     }
 }
 
