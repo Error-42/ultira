@@ -32,8 +32,10 @@ enum Command {
     /// Print the ratings of the players
     #[command(visible_alias = "r")]
     Ratings,
-    /// Adjust settings with rating corrections
-    Adjust(Adjust),
+    /// Get and set config.
+    /// 
+    /// Not passing any parameters to config will show to current value.
+    Config(Config),
     /// Undoes last command which affected history.
     ///
     /// These are
@@ -73,22 +75,26 @@ struct AddPlayer {
 
 #[derive(Debug, Parser)]
 #[command(subcommand_help_heading = "Params", subcommand_value_name = "PARAM")]
-struct Adjust {
+struct Config {
     #[command(subcommand)]
     param: Param,
 }
 
 #[derive(Debug, Subcommand)]
 enum Param {
-    /// Controls how agressively ratings points are redistruted.
-    ///
-    /// Each game `realloc * (average rating of the group - player rating)` ratings points are redistrobuted to the player.
+    /// If a player's rating if k * spread higher than the average, it means on average they win k points.
+    /// 
+    /// This is only affects display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "σ")]
     Spread { new_value: Option<f64> },
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
+    /// 
+    /// This affects both display and internal ratings. Modifications get commited to history, only affects new games.
     #[command(visible_alias = "μ")]
     ScoreMultiplier { new_value: Option<f64> },
     /// Adjusting the base rating will increase ratings by the difference between the new and old one.
+    /// 
+    /// This affects only display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
 }
@@ -208,7 +214,7 @@ fn main() {
         Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
-        Command::Adjust(a) => adjust(&args.file, a.param),
+        Command::Config(a) => adjust(&args.file, a.param),
         Command::Undo => undo(&args.file),
     }
 }
