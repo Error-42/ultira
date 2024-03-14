@@ -3,8 +3,6 @@ use std::{env, fs, io::Write, path::{Path, PathBuf}};
 use clap::{Parser, Subcommand};
 
 /// Ulti rating calculator
-///
-/// There is a temporary logging functionality built in. Because it is temporary, it is not implemented correctly. Please do not use special characters in arguments.
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
@@ -158,25 +156,8 @@ fn adjust(path: &Path, param: Param) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn log_command(path: &Path) {
-    let args = env::args();
-
-    let mut file = fs::OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(path)
-        .unwrap();
-
-    let args: Vec<_> = args.map(|arg| format!("\"{arg}\"")).collect();
-
-    writeln!(file, "{}", args.join(" ")).unwrap();
-}
-
 fn main() {
-    let args: Cli = Cli::parse();
-
-    // We only log the command if it was valid.
-    log_command(&args.file.with_extension(".log"));    
+    let args: Cli = Cli::parse();    
 
     match args.command {
         Command::Play(p) => play(&args.file, p),
