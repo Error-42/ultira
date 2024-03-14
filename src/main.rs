@@ -1,4 +1,4 @@
-use std::{env, fs, io::Write, path::{Path, PathBuf}};
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -69,7 +69,7 @@ enum Param {
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
     #[command(visible_alias = "μ")]
     ScoreMultiplier { new_value: f64 },
-    /// Adjusting the base rating will increase ratings by the difference between the new and old one. 
+    /// Adjusting the base rating will increase ratings by the difference between the new and old one.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
 }
@@ -91,8 +91,8 @@ fn play(path: &Path, play: Play) {
             ultira::Outcome {
                 player: play.player_3,
                 points: play.score_3,
-            }
-        ]
+            },
+        ],
     };
 
     let eval_before = data.evaluate();
@@ -101,7 +101,7 @@ fn play(path: &Path, play: Play) {
 
     let eval_after = data.evaluate();
 
-    for ultira::Outcome{ player, points: _ } in play.outcomes {
+    for ultira::Outcome { player, points: _ } in play.outcomes {
         println!(
             "{}: {:.1} -> {:.1}",
             player,
@@ -135,29 +135,27 @@ fn ratings(path: &Path) {
     ratings.sort_unstable_by_key(|(player, _rating)| player.clone());
 
     for (player, rating) in ratings {
-        println!(
-            "{}: {:.1}",
-            player,
-            data.config.rating_to_display(rating),
-        );
+        println!("{}: {:.1}", player, data.config.rating_to_display(rating),);
     }
 }
 
 fn adjust(path: &Path, param: Param) {
     let mut data = ultira::read_data(path).unwrap();
-    
+
     match param {
         Param::Spread { new_value } => data.config.spread = new_value,
         Param::ScoreMultiplier { new_value } => data.adjust_score_multiplier(new_value),
         Param::BaseRating { new_value: None } => println!("{}", data.config.base_rating),
-        Param::BaseRating { new_value: Some(val) } => data.config.base_rating = val,
+        Param::BaseRating {
+            new_value: Some(val),
+        } => data.config.base_rating = val,
     }
 
     ultira::write_data(path, &data).unwrap();
 }
 
 fn main() {
-    let args: Cli = Cli::parse();    
+    let args: Cli = Cli::parse();
 
     match args.command {
         Command::Play(p) => play(&args.file, p),

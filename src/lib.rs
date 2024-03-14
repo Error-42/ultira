@@ -17,12 +17,7 @@ pub fn write_data(path: &Path, data: &Data) -> Result<(), Box<dyn Error>> {
 }
 
 /// Returns the changes in the ratings, not the final ratings.
-pub fn rating_change(
-    α: f64,
-    games: usize,
-    ratings: [f64; 3],
-    scores: [f64; 3],
-) -> [f64; 3] {
+pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [f64; 3]) -> [f64; 3] {
     let average_rating = ratings.iter().sum::<f64>() / 3.0;
 
     let mut new_ratings = [0.0; 3];
@@ -33,8 +28,7 @@ pub fn rating_change(
         let g = games as i32;
         let s_i_avg = scores[i] / games as f64;
 
-        new_ratings[i] =
-            (1.0 - α).powi(g) * r_i + (r_avg + s_i_avg) * (1.0 - (1.0 - α).powi(g));
+        new_ratings[i] = (1.0 - α).powi(g) * r_i + (r_avg + s_i_avg) * (1.0 - (1.0 - α).powi(g));
 
         assert!(new_ratings[i].is_finite());
 
@@ -45,7 +39,6 @@ pub fn rating_change(
 
     new_ratings
 }
-
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Data {
@@ -68,12 +61,9 @@ impl Data {
                         .outcomes
                         .clone()
                         .map(|outcome| ratings[&outcome.player]);
-                    let scores = play
-                        .outcomes
-                        .clone()
-                        .map(|outcome| outcome.points);
+                    let scores = play.outcomes.clone().map(|outcome| outcome.points);
                     let new_ratings = rating_change(α, play.game_count, selected_ratings, scores);
-                
+
                     for i in 0..3 {
                         *ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
                     }
@@ -86,7 +76,8 @@ impl Data {
     }
 
     pub fn add_player(&mut self, name: String, rating: f64) {
-        self.history.push(Change::AddPlayer(AddPlayer { name, rating }));
+        self.history
+            .push(Change::AddPlayer(AddPlayer { name, rating }));
     }
 
     pub fn add_player_display(&mut self, name: String, display: f64) {
@@ -125,7 +116,7 @@ impl Default for Config {
 
 impl Config {
     pub fn rating_from_display(&self, display: f64) -> f64 {
-        (display - self.base_rating) / self.spread 
+        (display - self.base_rating) / self.spread
     }
 
     pub fn rating_to_display(&self, rating: f64) -> f64 {
