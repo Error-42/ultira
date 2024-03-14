@@ -28,6 +28,13 @@ enum Command {
     Ratings,
     /// Adjust settings with rating corrections
     Adjust(Adjust),
+    /// Undoes last command which affected history.
+    /// 
+    /// These are
+    /// - play
+    /// - add-player
+    /// - adjust realloc
+    Undo,
 }
 
 #[derive(Debug, Parser)]
@@ -154,6 +161,14 @@ fn adjust(path: &Path, param: Param) {
     ultira::write_data(path, &data).unwrap();
 }
 
+fn undo(path: &Path) {
+    let mut data = ultira::read_data(path).unwrap();
+
+    data.history.pop();
+
+    ultira::write_data(path, &data).unwrap();
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
@@ -163,5 +178,6 @@ fn main() {
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
         Command::Adjust(a) => adjust(&args.file, a.param),
+        Command::Undo => undo(&args.file),
     }
 }
