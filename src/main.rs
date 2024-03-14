@@ -71,6 +71,9 @@ enum Param {
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
     #[command(visible_alias = "μ")]
     ScoreMultiplier { new_value: f64 },
+    /// Adjusting the base rating will increase ratings by the difference between the new and old one. 
+    #[command(visible_alias = "δ")]
+    BaseRating { new_value: Option<f64> },
 }
 
 fn play(path: &Path, play: Play) {
@@ -148,6 +151,8 @@ fn adjust(path: &Path, param: Param) {
     match param {
         Param::Spread { new_value } => data.config.spread = new_value,
         Param::ScoreMultiplier { new_value } => data.adjust_score_multiplier(new_value),
+        Param::BaseRating { new_value: None } => println!("{}", data.config.default_rating),
+        Param::BaseRating { new_value: Some(val) } => data.config.default_rating = val,
     }
 
     ultira::write_data(path, &data).unwrap();
