@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 
 use clap::{Parser, Subcommand};
 
@@ -19,7 +22,7 @@ enum Command {
     Play(Play),
     /// Create or clear the file
     #[command(visible_alias = "n")]
-    New,
+    New(New),
     /// Add a new player; if the player already exists, their rating will be overriden.
     #[command(visible_alias = "add")]
     AddPlayer(AddPlayer),
@@ -29,7 +32,7 @@ enum Command {
     /// Adjust settings with rating corrections
     Adjust(Adjust),
     /// Undoes last command which affected history.
-    /// 
+    ///
     /// These are
     /// - play
     /// - add-player
@@ -49,6 +52,12 @@ struct Play {
     player_3: String,
     #[arg(allow_hyphen_values = true)]
     score_3: f64,
+}
+
+#[derive(Debug, Parser)]
+struct New {
+    #[arg(short = 'n', long, action)]
+    no_confirm: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -120,7 +129,18 @@ fn play(path: &Path, play: Play) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn new(path: &Path) {
+fn new(path: &Path, param: New) {
+    if !param.no_confirm && path.exists() {
+        println!(
+            "Are you sure you want to override {} (y/N)?",
+            path.to_string_lossy()
+        );
+
+        if !confirm() {
+            return;
+        }
+    }
+
     ultira::write_data(path, &Default::default()).unwrap();
 }
 
@@ -174,10 +194,22 @@ fn main() {
 
     match args.command {
         Command::Play(p) => play(&args.file, p),
-        Command::New => new(&args.file),
+        Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
         Command::Adjust(a) => adjust(&args.file, a.param),
         Command::Undo => undo(&args.file),
+    }
+}
+
+fn confirm() -> bool {
+    let mut ans = String::new();
+    io::stdin().read_line(&mut ans).unwrap();
+
+    if ans.trim() == "y" || ans.trim() == "Y" {
+        true
+    } else {
+        println!("Confirmation didn't match 'y' or 'Y', aborting...");
+        false
     }
 }
