@@ -109,7 +109,7 @@ impl Data {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub spread: f64,
-    pub default_rating: f64,
+    pub base_rating: f64,
     pub starting_alpha: f64,
 }
 
@@ -117,7 +117,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             spread: 50.0,
-            default_rating: 100.0,
+            base_rating: 100.0,
             starting_alpha: 0.02,
         }
     }
@@ -125,11 +125,11 @@ impl Default for Config {
 
 impl Config {
     pub fn rating_from_display(&self, display: f64) -> f64 {
-        (display - self.default_rating) / self.spread 
+        (display - self.base_rating) / self.spread 
     }
 
     pub fn rating_to_display(&self, rating: f64) -> f64 {
-        rating * self.spread + self.default_rating
+        rating * self.spread + self.base_rating
     }
 
     pub fn α_from_display(&self, display: f64) -> f64 {

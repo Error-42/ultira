@@ -121,7 +121,7 @@ fn new(path: &Path) {
 
 fn add_player(path: &Path, param: AddPlayer) {
     let mut data = ultira::read_data(path).unwrap();
-    let rating = param.rating.unwrap_or(data.config.default_rating);
+    let rating = param.rating.unwrap_or(data.config.base_rating);
 
     data.add_player_display(param.player, rating);
 
@@ -151,8 +151,8 @@ fn adjust(path: &Path, param: Param) {
     match param {
         Param::Spread { new_value } => data.config.spread = new_value,
         Param::ScoreMultiplier { new_value } => data.adjust_score_multiplier(new_value),
-        Param::BaseRating { new_value: None } => println!("{}", data.config.default_rating),
-        Param::BaseRating { new_value: Some(val) } => data.config.default_rating = val,
+        Param::BaseRating { new_value: None } => println!("{}", data.config.base_rating),
+        Param::BaseRating { new_value: Some(val) } => data.config.base_rating = val,
     }
 
     ultira::write_data(path, &data).unwrap();
