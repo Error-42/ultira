@@ -149,7 +149,19 @@ pub struct AddPlayer {
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct Play {
     pub game_count: usize,
+    #[serde(with = "toml_datetime_compat")]
+    pub time: chrono::DateTime<chrono::FixedOffset>,
     pub outcomes: [Outcome; 3],
+}
+
+impl Play {
+    pub fn now(game_count: usize, outcomes: [Outcome; 3]) -> Self {
+        Play {
+            game_count,
+            time: chrono::Local::now().fixed_offset(),
+            outcomes,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]

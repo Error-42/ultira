@@ -33,7 +33,7 @@ enum Command {
     #[command(visible_alias = "r")]
     Ratings,
     /// Get and set config.
-    /// 
+    ///
     /// Not passing any parameters to config will show to current value.
     Config(Config),
     /// Undoes last command which affected history.
@@ -83,17 +83,17 @@ struct Config {
 #[derive(Debug, Subcommand)]
 enum Param {
     /// If a player's rating if k * spread higher than the average, it means on average they win k points.
-    /// 
+    ///
     /// This is only affects display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "σ")]
     Spread { new_value: Option<f64> },
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
-    /// 
+    ///
     /// This affects both display and internal ratings. Modifications get commited to history, only affects new games.
     #[command(visible_alias = "μ")]
     ScoreMultiplier { new_value: Option<f64> },
     /// Adjusting the base rating will increase ratings by the difference between the new and old one.
-    /// 
+    ///
     /// This affects only display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
@@ -102,9 +102,9 @@ enum Param {
 fn play(path: &Path, play: Play) {
     let mut data = read_data(path);
 
-    let play = ultira::Play {
-        game_count: play.games,
-        outcomes: [
+    let play = ultira::Play::now(
+        play.games,
+        [
             ultira::Outcome {
                 player: play.player_1,
                 points: play.score_1,
@@ -118,7 +118,7 @@ fn play(path: &Path, play: Play) {
                 points: play.score_3,
             },
         ],
-    };
+    );
 
     let eval_before = data.evaluate();
 
