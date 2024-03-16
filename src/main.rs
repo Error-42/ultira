@@ -57,8 +57,8 @@ struct Play {
     player_3: String,
     #[arg(allow_hyphen_values = true)]
     score_3: f64,
-    #[arg(short = 't', long)]
-    time: Option<chrono::DateTime<chrono::FixedOffset>>,
+    #[arg(short = 'd', long)]
+    date: Option<chrono::NaiveDate>,
 }
 
 #[derive(Debug, Parser)]
@@ -120,10 +120,10 @@ fn play(path: &Path, play: Play) {
         },
     ];
 
-    let play = match play.time {
-        Some(time) => ultira::Play {
+    let play = match play.date {
+        Some(date) => ultira::Play {
             game_count: play.games,
-            time: time.fixed_offset(),
+            date,
             outcomes,
         },
         None => ultira::Play::now(play.games, outcomes),
