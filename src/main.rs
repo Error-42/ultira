@@ -20,7 +20,11 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Evaluate rating changes after a game
+    /// Evaluate rating changes after a game.
+    ///
+    /// Games are ordered, this will make this game the newest one, no matter the date.
+    ///
+    /// Each game has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
     #[command(visible_alias = "p")]
     Play(Play),
     /// Create or clear the file
@@ -47,16 +51,24 @@ enum Command {
 
 #[derive(Debug, Parser)]
 struct Play {
+    /// Number of games
     games: usize,
+    /// Name of player 1
     player_1: String,
+    /// Total score of player 1
     #[arg(allow_hyphen_values = true)]
     score_1: f64,
+    /// Name of player 2
     player_2: String,
+    /// Total score of player 2
     #[arg(allow_hyphen_values = true)]
     score_2: f64,
+    /// Name of player 3
     player_3: String,
+    /// Total score of player 3
     #[arg(allow_hyphen_values = true)]
     score_3: f64,
+    /// Specify date of game, does not affect the order of games. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
 }
