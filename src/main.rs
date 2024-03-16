@@ -72,6 +72,7 @@ struct AddPlayer {
     /// The name of the new player
     player: String,
     /// The rating of the new player
+    #[arg(allow_hyphen_values = true)]
     rating: Option<f64>,
 }
 
