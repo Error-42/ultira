@@ -57,6 +57,8 @@ struct Play {
     player_3: String,
     #[arg(allow_hyphen_values = true)]
     score_3: f64,
+    #[arg(short = 't', long)]
+    time: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 #[derive(Debug, Parser)]
@@ -102,23 +104,29 @@ enum Param {
 fn play(path: &Path, play: Play) {
     let mut data = read_data(path);
 
-    let play = ultira::Play::now(
-        play.games,
-        [
-            ultira::Outcome {
-                player: play.player_1,
-                points: play.score_1,
-            },
-            ultira::Outcome {
-                player: play.player_2,
-                points: play.score_2,
-            },
-            ultira::Outcome {
-                player: play.player_3,
-                points: play.score_3,
-            },
-        ],
-    );
+    let outcomes = [
+        ultira::Outcome {
+            player: play.player_1,
+            points: play.score_1,
+        },
+        ultira::Outcome {
+            player: play.player_2,
+            points: play.score_2,
+        },
+        ultira::Outcome {
+            player: play.player_3,
+            points: play.score_3,
+        },
+    ];
+
+    let play = match play.time {
+        Some(time) => ultira::Play {
+            game_count: play.games,
+            time: time.fixed_offset(),
+            outcomes,
+        },
+        None => ultira::Play::now(play.games, outcomes),
+    };
 
     let eval_before = data.evaluate();
 
