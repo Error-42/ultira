@@ -28,7 +28,6 @@ enum Command {
     #[command(visible_alias = "p")]
     Play(Play),
     /// Create or clear the file
-    #[command(visible_alias = "n")]
     New(New),
     /// Add a new player; if the player already exists, their rating will be overriden.
     #[command(visible_alias = "add")]
