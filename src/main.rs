@@ -221,6 +221,15 @@ fn adjust(path: &Path, param: Param) {
 fn undo(path: &Path) {
     let mut data = read_data(path);
 
+    println!(
+        "Are you sure you want to undo last action inside {}? (y/N)",
+        path.to_string_lossy()
+    );
+
+    if !confirm() {
+        return;
+    }
+
     data.history.pop();
 
     ultira::write_data(path, &data).unwrap();
