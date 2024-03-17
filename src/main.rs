@@ -221,8 +221,15 @@ fn adjust(path: &Path, param: Param) {
 fn undo(path: &Path) {
     let mut data = read_data(path);
 
+    let Some(last) = data.history.last() else {
+        eprintln!("Nothing to undo (undo only affects history)");
+        process::exit(1);
+    };
+
+    println!("Last element of history: {:#?}", last);
+
     println!(
-        "Are you sure you want to undo last action inside {}? (y/N)",
+        "Are you sure you want to undo last action affecting history (see above) inside {}? (y/N)",
         path.to_string_lossy()
     );
 
