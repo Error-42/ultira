@@ -45,7 +45,7 @@ enum Command {
     /// - play
     /// - add-player
     /// - adjust realloc
-    Undo,
+    Undo(Undo),
 }
 
 #[derive(Debug, Parser)]
@@ -111,6 +111,12 @@ enum Param {
     /// This affects only display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
+}
+
+#[derive(Debug, Parser)]
+struct Undo {
+    #[arg(short = 'n', long, action)]
+    no_confirm: bool,
 }
 
 fn play(path: &Path, play: Play) {
@@ -218,7 +224,7 @@ fn adjust(path: &Path, param: Param) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn undo(path: &Path) {
+fn undo(path: &Path, undo: Undo) {
     let mut data = read_data(path);
 
     let Some(last) = data.history.last() else {
@@ -226,15 +232,17 @@ fn undo(path: &Path) {
         process::exit(1);
     };
 
-    println!("Last element of history: {:#?}", last);
+    if !undo.no_confirm {
+        println!("Last element of history: {:#?}", last);
 
-    println!(
-        "Are you sure you want to undo last action affecting history (see above) inside {}? (y/N)",
-        path.to_string_lossy()
-    );
+        println!(
+            "Are you sure you want to undo last action affecting history (see above) inside {}? (y/N)",
+            path.to_string_lossy()
+        );
 
-    if !confirm() {
-        return;
+        if !confirm() {
+            return;
+        }
     }
 
     data.history.pop();
@@ -251,7 +259,7 @@ fn main() {
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
         Command::Config(a) => adjust(&args.file, a.param),
-        Command::Undo => undo(&args.file),
+        Command::Undo(p) => undo(&args.file, p),
     }
 }
 
