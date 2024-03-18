@@ -13,6 +13,7 @@ use clap::{Parser, Subcommand};
 #[clap(version)]
 struct Cli {
     /// File containing the data
+    #[arg(default_value = "ultira.toml", short, long)]
     file: PathBuf,
     #[command(subcommand)]
     command: Command,
