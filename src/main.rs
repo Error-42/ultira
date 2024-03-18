@@ -137,6 +137,13 @@ fn play(path: &Path, play: Play) {
         },
     ];
 
+    let ε = 1e-4;
+
+    if outcomes.iter().map(|o| o.points).sum::<f64>().abs() > ε {
+        eprintln!("Points don't sum to 0. (ε = {ε} for checking equality.)");
+        return;
+    }
+
     let play = match play.date {
         Some(date) => ultira::Play {
             game_count: play.games,
