@@ -134,9 +134,13 @@ impl Config {
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[non_exhaustive]
+#[serde(rename_all = "snake_case")]
 pub enum Change {
+    #[serde(alias = "AddPlayer")]
     AddPlayer(AddPlayer),
+    #[serde(alias = "Play")]
     Play(Play),
+    #[serde(alias = "AdjustAlpha")]
     AdjustAlpha(f64),
 }
 
