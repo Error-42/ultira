@@ -17,7 +17,7 @@ pub fn write_data(path: &Path, data: &Data) -> Result<(), Box<dyn Error>> {
 }
 
 /// Returns the changes in the ratings, not the final ratings.
-pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [f64; 3]) -> [f64; 3] {
+pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3]) -> [f64; 3] {
     let average_rating = ratings.iter().sum::<f64>() / 3.0;
 
     let mut new_ratings = [0.0; 3];
@@ -26,7 +26,7 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [f64; 3])
         let r_i = ratings[i];
         let r_avg = average_rating;
         let g = games as i32;
-        let s_i_avg = scores[i] / games as f64;
+        let s_i_avg = scores[i] as f64 / games as f64;
 
         new_ratings[i] = (1.0 - α).powi(g) * r_i + (r_avg + s_i_avg) * (1.0 - (1.0 - α).powi(g));
 
@@ -167,7 +167,7 @@ impl Play {
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct Outcome {
     pub player: String,
-    pub points: f64,
+    pub points: i64,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]

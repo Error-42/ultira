@@ -57,17 +57,17 @@ struct Play {
     player_1: String,
     /// Total score of player 1
     #[arg(allow_hyphen_values = true)]
-    score_1: f64,
+    score_1: i64,
     /// Name of player 2
     player_2: String,
     /// Total score of player 2
     #[arg(allow_hyphen_values = true)]
-    score_2: f64,
+    score_2: i64,
     /// Name of player 3
     player_3: String,
     /// Total score of player 3
     #[arg(allow_hyphen_values = true)]
-    score_3: f64,
+    score_3: i64,
     /// Specify date of game, does not affect the order of games. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
@@ -138,10 +138,8 @@ fn play(path: &Path, play: Play) {
         },
     ];
 
-    let ε = 1e-4;
-
-    if outcomes.iter().map(|o| o.points).sum::<f64>().abs() > ε {
-        eprintln!("Points don't sum to 0. (ε = {ε} for checking equality.)");
+    if outcomes.iter().map(|o| o.points).sum::<i64>() != 0 {
+        eprintln!("Points don't sum to 0.");
         return;
     }
 
