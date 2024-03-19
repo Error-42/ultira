@@ -16,7 +16,24 @@ pub fn write_data(path: &Path, data: &Data) -> Result<(), Box<dyn Error>> {
     Ok(fs::write(path, str)?)
 }
 
-/// Returns the changes in the ratings, not the final ratings.
+/// Returns the final ratings
+///
+/// ```
+/// use ultira::rating_change;
+///
+/// let α = 0.1;
+/// let game_count = 1;
+/// let ratings = [0.0, 0.0, 0.0];
+/// let scores = [4, -2, -2];
+///
+/// let new_ratings = rating_change(α, game_count, ratings, scores);
+/// let expected_ratings = [0.4, -0.2, -0.2];
+///
+/// new_ratings
+///     .iter()
+///     .zip(expected_ratings.iter())
+///     .for_each(|(a, b)| assert!((a - b).abs() < 0.0001));
+/// ```
 pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3]) -> [f64; 3] {
     let average_rating = ratings.iter().sum::<f64>() / 3.0;
 
