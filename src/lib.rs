@@ -48,10 +48,6 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3])
         new_ratings[i] = (1.0 - α).powi(g) * r_i + (r_avg + s_i_avg) * (1.0 - (1.0 - α).powi(g));
 
         assert!(new_ratings[i].is_finite());
-
-        // new_ratings[i] = (1.0 - config.realloc).powi(games as i32) * ratings[i]
-        //     + (average_rating + config.score_multiplier / config.realloc * (scores[i] / games as f64))
-        //     * (1.0 - (1.0 - config.realloc).powi(games as i32));
     }
 
     new_ratings
