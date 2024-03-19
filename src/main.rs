@@ -21,11 +21,13 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Evaluate rating changes after a game.
+    /// Evaluate rating changes after a play.
     ///
-    /// Games are ordered, this will make this game the newest one, no matter the date.
+    /// A play in defined as a consecutive series of games by the same three people on the same day uninterrupted. We consider a play interrupted iff at least one of the three members plays a rated game with someone other than the other two people.
     ///
-    /// Each game has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
+    /// Players are ordered, this will make this play the newest one, no matter the date.
+    ///
+    /// Each play has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
     #[command(visible_alias = "p")]
     Play(Play),
     /// Create or clear the file
@@ -52,7 +54,7 @@ enum Command {
 #[derive(Debug, Parser)]
 struct Play {
     /// Number of games
-    games: usize,
+    game_count: usize,
     /// Name of player 1
     player_1: String,
     /// Total score of player 1
@@ -68,7 +70,7 @@ struct Play {
     /// Total score of player 3
     #[arg(allow_hyphen_values = true)]
     score_3: i64,
-    /// Specify date of game, does not affect the order of games. Format: YYYY-MM-DD
+    /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
 }
@@ -104,7 +106,7 @@ enum Param {
     Spread { new_value: Option<f64> },
     /// Assuming equal ratings, the rating points will be adjusted by score multiplier * score.
     ///
-    /// This affects both display and internal ratings. Modifications get commited to history, only affects new games.
+    /// This affects both display and internal ratings. Modifications get commited to history, only affects new plays.
     #[command(visible_alias = "μ")]
     ScoreMultiplier { new_value: Option<f64> },
     /// Adjusting the base rating will increase ratings by the difference between the new and old one.
@@ -145,11 +147,11 @@ fn play(path: &Path, play: Play) {
 
     let play = match play.date {
         Some(date) => ultira::Play {
-            game_count: play.games,
+            game_count: play.game_count,
             date,
             outcomes,
         },
-        None => ultira::Play::now(play.games, outcomes),
+        None => ultira::Play::now(play.game_count, outcomes),
     };
 
     let eval_before = data.evaluate();
