@@ -1,6 +1,5 @@
 #![allow(mixed_script_confusables)]
 /// Only the binary may be stable, the library cannot!
-
 use std::{collections::HashMap, error::Error, fs, path::Path};
 
 use serde::{Deserialize, Serialize};
