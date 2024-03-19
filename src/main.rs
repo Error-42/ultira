@@ -126,19 +126,19 @@ fn play(path: &Path, play: Play) {
     let outcomes = [
         ultira::Outcome {
             player: play.player_1,
-            points: play.score_1,
+            score: play.score_1,
         },
         ultira::Outcome {
             player: play.player_2,
-            points: play.score_2,
+            score: play.score_2,
         },
         ultira::Outcome {
             player: play.player_3,
-            points: play.score_3,
+            score: play.score_3,
         },
     ];
 
-    if outcomes.iter().map(|o| o.points).sum::<i64>() != 0 {
+    if outcomes.iter().map(|o| o.score).sum::<i64>() != 0 {
         eprintln!("Points don't sum to 0.");
         return;
     }
@@ -158,7 +158,7 @@ fn play(path: &Path, play: Play) {
 
     let eval_after = data.evaluate();
 
-    for ultira::Outcome { player, points: _ } in play.outcomes {
+    for ultira::Outcome { player, score: _ } in play.outcomes {
         println!(
             "{}: {:.1} -> {:.1}",
             player,

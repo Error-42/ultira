@@ -61,7 +61,7 @@ impl Data {
                         .outcomes
                         .clone()
                         .map(|outcome| ratings[&outcome.player]);
-                    let scores = play.outcomes.clone().map(|outcome| outcome.points);
+                    let scores = play.outcomes.clone().map(|outcome| outcome.score);
                     let new_ratings = rating_change(α, play.game_count, selected_ratings, scores);
 
                     for i in 0..3 {
@@ -167,7 +167,8 @@ impl Play {
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct Outcome {
     pub player: String,
-    pub points: i64,
+    #[serde(alias = "points")]
+    pub score: i64,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
