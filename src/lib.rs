@@ -149,11 +149,8 @@ impl Config {
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum Change {
-    #[serde(alias = "AddPlayer")]
     AddPlayer(AddPlayer),
-    #[serde(alias = "Play")]
     Play(Play),
-    #[serde(alias = "AdjustAlpha")]
     AdjustAlpha(f64),
 }
 
@@ -184,7 +181,6 @@ impl Play {
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct Outcome {
     pub player: String,
-    #[serde(alias = "points")]
     pub score: i64,
 }
 

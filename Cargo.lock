@@ -390,7 +390,7 @@ dependencies = [
 
 [[package]]
 name = "ultira"
-version = "0.15.0"
+version = "1.0.0-rc.1"
 dependencies = [
  "chrono",
  "clap",
