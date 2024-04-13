@@ -292,6 +292,17 @@ fn rename_player(path: &Path, rename: RenamePlayer) {
         return;
     };
 
+    if data.evaluate().ratings.keys().any(|name| *name == rename.new_name) {
+        println!(
+            "Name '{}' already exists. YOU CANNOT UNDO THIS OPERATION. Are you sure you want to MERGE these two players into one? (y/N)",
+            rename.new_name
+        );
+
+        if !confirm() {
+            return;
+        }
+    }
+
     data.rename(&old_name, &rename.new_name);
 
     ultira::write_data(path, &data).unwrap();
