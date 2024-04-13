@@ -139,17 +139,29 @@ struct Undo {
 fn play(path: &Path, play: Play) {
     let mut data = read_data(path);
 
+    let Some(player_1) = try_find_name(&data, &play.player_1) else {
+        return;
+    };
+
+    let Some(player_2) = try_find_name(&data, &play.player_2) else {
+        return;
+    };
+
+    let Some(player_3) = try_find_name(&data, &play.player_3) else {
+        return;
+    };
+
     let outcomes = [
         ultira::Outcome {
-            player: play.player_1,
+            player: player_1,
             score: play.score_1,
         },
         ultira::Outcome {
-            player: play.player_2,
+            player: player_2,
             score: play.score_2,
         },
         ultira::Outcome {
-            player: play.player_3,
+            player: player_3,
             score: play.score_3,
         },
     ];
