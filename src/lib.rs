@@ -108,6 +108,26 @@ impl Data {
     pub fn adjust_score_multiplier(&mut self, new: f64) {
         self.adjust_α(self.config.α_from_display(new));
     }
+
+    pub fn rename(&mut self, old_name: &str, new_name: &str) {
+        for elem in &mut self.history {
+            match elem {
+                Change::AddPlayer(p) => {
+                    if p.name == old_name {
+                        p.name = new_name.to_owned();
+                    }
+                },
+                Change::Play(p) => {
+                    for outcome in &mut p.outcomes {
+                        if outcome.player == old_name {
+                            outcome.player = new_name.to_owned();
+                        }
+                    }
+                },
+                Change::AdjustAlpha(_) => {},
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -188,4 +208,36 @@ pub struct Outcome {
 pub struct Evaluation {
     pub α: f64,
     pub ratings: HashMap<String, f64>,
+}
+
+impl Evaluation {
+    pub fn matching_names<'s>(&'s self, pattern: &'s str) -> impl Iterator<Item = &String> + 's {
+        self
+            .ratings
+            .keys()
+            .filter(|name| match_names(name, pattern))
+    }
+}
+
+fn match_names(matched: &str, pattern: &str) -> bool {
+    let split_name = matched.split(' ').filter(|x| !x.is_empty());
+    let mut split_pattern = pattern.split(' ').filter(|x| !x.is_empty()).peekable();
+
+    for name_part in split_name {
+        let Some(pattern_part) = split_pattern.peek() else {
+            return true;
+        };
+
+        let advance = if pattern_part.chars().count() == 1 {
+            name_part.chars().next().unwrap() == pattern_part.chars().next().unwrap()
+        } else {
+            name_part == *pattern_part
+        };
+
+        if advance {
+            split_pattern.next();
+        }
+    }
+
+    split_pattern.next().is_none()
 }

@@ -49,6 +49,7 @@ enum Command {
     /// - add-player
     /// - adjust realloc
     Undo(Undo),
+    Rename(Rename),
 }
 
 #[derive(Debug, Parser)]
@@ -114,6 +115,12 @@ enum Param {
     /// This affects only display ratings, not internal ones. Modifications do not get commited to history.
     #[command(visible_alias = "δ")]
     BaseRating { new_value: Option<f64> },
+}
+
+#[derive(Debug, Parser)]
+struct Rename {
+    old_name: String,
+    new_name: String,
 }
 
 #[derive(Debug, Parser)]
@@ -258,6 +265,20 @@ fn undo(path: &Path, undo: Undo) {
     ultira::write_data(path, &data).unwrap();
 }
 
+fn rename(path: &Path, rename: Rename) {
+    let mut data = read_data(path);
+
+    let Some(old_name) = try_find_name(&data, &rename.old_name) else {
+        return;
+    };
+
+    data.rename(&old_name, &rename.new_name);
+
+    ultira::write_data(path, &data).unwrap();
+
+    println!("Renamed {old_name} to {}", rename.new_name);
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
@@ -268,6 +289,7 @@ fn main() {
         Command::Ratings => ratings(&args.file),
         Command::Config(a) => adjust(&args.file, a.param),
         Command::Undo(p) => undo(&args.file, p),
+        Command::Rename(p) => rename(&args.file, p),
     }
 }
 
@@ -277,6 +299,26 @@ fn read_data(path: &Path) -> ultira::Data {
         Err(err) => {
             eprintln!("{err}");
             process::exit(1);
+        }
+    }
+}
+
+fn try_find_name(data: &ultira::Data, name: &str) -> Option<String> {
+    let eval = data.evaluate();
+    let matches: Vec<_> = eval.matching_names(name).collect();
+
+    match matches.len() {
+        0 => {
+            println!("Name '{name}' didn't match any names, aborting...");
+            None
+        }
+        1 => Some(matches[0].clone()),
+        _ => {
+            println!("Name '{name}' match multiple names, aborting. Matched names are:");
+            for name in matches {
+                println!("{name}");
+            }
+            None
         }
     }
 }
