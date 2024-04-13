@@ -56,7 +56,8 @@ enum Command {
     /// - add-player
     /// - adjust realloc
     Undo(Undo),
-    Rename(Rename),
+    #[command(visible_alias = "rename")]
+    RenamePlayer(RenamePlayer),
 }
 
 #[derive(Debug, Parser)]
@@ -125,7 +126,7 @@ enum Param {
 }
 
 #[derive(Debug, Parser)]
-struct Rename {
+struct RenamePlayer {
     old_name: String,
     new_name: String,
 }
@@ -284,7 +285,7 @@ fn undo(path: &Path, undo: Undo) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn rename(path: &Path, rename: Rename) {
+fn rename_player(path: &Path, rename: RenamePlayer) {
     let mut data = read_data(path);
 
     let Some(old_name) = try_find_name(&data, &rename.old_name) else {
@@ -308,7 +309,7 @@ fn main() {
         Command::Ratings => ratings(&args.file),
         Command::Config(a) => adjust(&args.file, a.param),
         Command::Undo(p) => undo(&args.file, p),
-        Command::Rename(p) => rename(&args.file, p),
+        Command::RenamePlayer(p) => rename_player(&args.file, p),
     }
 }
 
