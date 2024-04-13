@@ -56,6 +56,7 @@ enum Command {
     /// - add-player
     /// - adjust realloc
     Undo(Undo),
+    /// Renames a player to a new name, also allows merging players
     #[command(visible_alias = "rename")]
     RenamePlayer(RenamePlayer),
 }
