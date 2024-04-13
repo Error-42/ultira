@@ -9,6 +9,13 @@ use std::{
 use clap::{Parser, Subcommand};
 
 /// Ulti rating calculator
+/// 
+/// Player naming:
+/// 
+/// Names are case sensitive. Using full names is recommended for players. You don't have to write out the full name. Given a pattern, if an exact match exists, that will be used, otherwise the pattern is split up by spaces. Each part must match a part of the original name in order.
+/// 
+/// - A pattern part consisting of a single letter will match any name part starting with that letter.
+/// - Otherwise a pattern part must exactly match a name part. 
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
