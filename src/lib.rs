@@ -211,11 +211,17 @@ pub struct Evaluation {
 }
 
 impl Evaluation {
-    pub fn matching_names<'s>(&'s self, pattern: &'s str) -> impl Iterator<Item = &String> + 's {
+    pub fn matching_names<'s>(&'s self, pattern: &'s str) -> Vec<&'s str> {
+        if self.ratings.keys().any(|name| name == pattern) {
+            return vec![pattern];
+        }
+        
         self
             .ratings
             .keys()
             .filter(|name| match_names(name, pattern))
+            .map(|name| name.as_str())
+            .collect()
     }
 }
 

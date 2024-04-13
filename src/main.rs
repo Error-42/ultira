@@ -312,14 +312,14 @@ fn read_data(path: &Path) -> ultira::Data {
 
 fn try_find_name(data: &ultira::Data, name: &str) -> Option<String> {
     let eval = data.evaluate();
-    let matches: Vec<_> = eval.matching_names(name).collect();
+    let matches = eval.matching_names(name);
 
     match matches.len() {
         0 => {
             println!("Name '{name}' didn't match any names, aborting...");
             None
         }
-        1 => Some(matches[0].clone()),
+        1 => Some(matches[0].to_owned()),
         _ => {
             println!("Name '{name}' match multiple names, aborting. Matched names are:");
             for name in matches {
