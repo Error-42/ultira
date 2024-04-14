@@ -17,7 +17,7 @@ use clap::{Parser, Subcommand};
 /// - A pattern part consisting of a single letter will match any name part starting with that letter.
 /// - Otherwise a pattern part must exactly match a name part.
 /// 
-/// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell" and therefore will give an error.
+/// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell", but not "Németh Dominik".
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
