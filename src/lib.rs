@@ -116,15 +116,15 @@ impl Data {
                     if p.name == old_name {
                         p.name = new_name.to_owned();
                     }
-                },
+                }
                 Change::Play(p) => {
                     for outcome in &mut p.outcomes {
                         if outcome.player == old_name {
                             outcome.player = new_name.to_owned();
                         }
                     }
-                },
-                Change::AdjustAlpha(_) => {},
+                }
+                Change::AdjustAlpha(_) => {}
             }
         }
     }
@@ -215,9 +215,8 @@ impl Evaluation {
         if self.ratings.keys().any(|name| name == pattern) {
             return vec![pattern];
         }
-        
-        self
-            .ratings
+
+        self.ratings
             .keys()
             .filter(|name| match_names(name, pattern))
             .map(|name| name.as_str())
