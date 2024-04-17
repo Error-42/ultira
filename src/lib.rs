@@ -234,13 +234,7 @@ fn match_names(matched: &str, pattern: &str) -> bool {
             return true;
         };
 
-        let advance = if pattern_part.chars().count() == 1 {
-            name_part.chars().next().unwrap() == pattern_part.chars().next().unwrap()
-        } else {
-            name_part == *pattern_part
-        };
-
-        if advance {
+        if name_part.starts_with(pattern_part) {
             split_pattern.next();
         }
     }
