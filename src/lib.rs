@@ -225,18 +225,18 @@ impl Evaluation {
 }
 
 fn match_names(matched: &str, pattern: &str) -> bool {
-    let split_name = matched.split(' ').filter(|x| !x.is_empty());
-    let mut split_pattern = pattern.split(' ').filter(|x| !x.is_empty()).peekable();
+    let mut split_name = matched.split(' ').filter(|x| !x.is_empty());
+    let split_pattern = pattern.split(' ').filter(|x| !x.is_empty());
 
-    for name_part in split_name {
-        let Some(pattern_part) = split_pattern.peek() else {
-            return true;
-        };
-
-        if name_part.starts_with(pattern_part) {
-            split_pattern.next();
+    for pattern_word in split_pattern {
+        loop {
+            match split_name.next() {
+                Some(word) if word.starts_with(pattern_word) => break,
+                Some(_word) => {},
+                None => return false,
+            }
         }
     }
 
-    split_pattern.next().is_none()
+    return true;
 }
