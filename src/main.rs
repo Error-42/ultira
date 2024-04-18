@@ -9,15 +9,15 @@ use std::{
 use clap::{Parser, Subcommand};
 
 /// Ulti rating calculator
-/// 
+///
 /// Player naming:
-/// 
-/// Names are case sensitive. Using full names is recommended for players. You don't have to write out the full name. Given a pattern, if an exact match exists, that will be used, otherwise the pattern is split up by spaces. Each part must match a part of the original name in order.
-/// 
-/// - A pattern part consisting of a single letter will match any name part starting with that letter.
-/// - Otherwise a pattern part must exactly match a name part.
-/// 
-/// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell", but not "Németh Dominik".
+///
+/// Names are case sensitive. Using full names is recommended for players. You don't have to write out the full name.
+///
+/// 1. Given a pattern, if an exact match exists, that will be used.
+/// 2. Otherwist a pattern matches the name iff there exists such a subsequence of the words of the name, the words of the pattern are prefixes of the corresponding words of the subsequence.
+///
+/// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell" and therefore will give an error. "Dani" will match "Dániel".
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
@@ -295,7 +295,12 @@ fn rename_player(path: &Path, rename: RenamePlayer) {
         return;
     };
 
-    if data.evaluate().ratings.keys().any(|name| *name == rename.new_name) {
+    if data
+        .evaluate()
+        .ratings
+        .keys()
+        .any(|name| *name == rename.new_name)
+    {
         println!(
             "Name '{}' already exists. YOU CANNOT UNDO THIS OPERATION. Are you sure you want to MERGE these two players into one? (y/N)",
             rename.new_name
