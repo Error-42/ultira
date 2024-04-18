@@ -240,3 +240,17 @@ fn match_names(matched: &str, pattern: &str) -> bool {
 
     return true;
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn name_matching() {
+        assert!(match_names("Németh Marcell", "Németh M"));
+        assert!(match_names("Németh Márton", "Németh M"));
+        assert!(!match_names("Németh Dominik", "Németh M"));
+        assert!(match_names("Németh Marcell", "Ma"));
+        assert!(!match_names("Németh Márton", "Ma"));
+    }
+}
