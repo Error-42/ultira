@@ -238,7 +238,7 @@ fn match_names(matched: &str, pattern: &str) -> bool {
         }
     }
 
-    return true;
+    true
 }
 
 #[cfg(test)]
