@@ -231,8 +231,9 @@ fn ratings(path: &Path) {
 
     let mut ratings: Vec<(String, f64)> = data.evaluate().ratings.into_iter().collect();
 
-    // Clone is probably avoidable, but I'm lazy.
-    ratings.sort_unstable_by_key(|(player, _rating)| player.clone());
+    ratings.sort_unstable_by(|(_player_a, rating_a), (_player_b, rating_b)| {
+        rating_a.partial_cmp(rating_b).unwrap().reverse()
+    });
 
     for (player, rating) in ratings {
         println!("{:6.1} {}", data.config.rating_to_display(rating), player);
