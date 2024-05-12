@@ -235,7 +235,7 @@ fn ratings(path: &Path) {
     ratings.sort_unstable_by_key(|(player, _rating)| player.clone());
 
     for (player, rating) in ratings {
-        println!("{}: {:.1}", player, data.config.rating_to_display(rating),);
+        println!("{:6.1} {}", data.config.rating_to_display(rating), player);
     }
 }
 
