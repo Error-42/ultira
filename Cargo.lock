@@ -347,9 +347,9 @@ dependencies = [
 
 [[package]]
 name = "toml-datetime-compat"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c6f7ec5a9d5b82228a4cf2355a62cee3fbc4d2ab77b421f5e95dfeb11c8cf87"
+checksum = "18435fd3f58059d1fcd97ff5620a25a461d072f28a9121685ae0f84b5ddbd653"
 dependencies = [
  "chrono",
  "serde",
