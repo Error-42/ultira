@@ -60,32 +60,18 @@ pub struct Data {
 }
 
 impl Data {
+    pub fn starting_evaluation(&self) -> Evaluation {
+        Evaluation::new(self.config.starting_alpha)
+    }
+
     pub fn evaluate(&self) -> Evaluation {
-        let mut α = self.config.starting_alpha;
-        let mut ratings: HashMap<String, f64> = HashMap::new();
+        let mut evaluation = self.starting_evaluation();
 
         for change in &self.history {
-            match change {
-                Change::AddPlayer(addition) => {
-                    ratings.insert(addition.name.clone(), addition.rating);
-                }
-                Change::Play(play) => {
-                    let selected_ratings: [f64; 3] = play
-                        .outcomes
-                        .clone()
-                        .map(|outcome| ratings[&outcome.player]);
-                    let scores = play.outcomes.clone().map(|outcome| outcome.score);
-                    let new_ratings = rating_change(α, play.game_count, selected_ratings, scores);
-
-                    for i in 0..3 {
-                        *ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
-                    }
-                }
-                Change::AdjustAlpha(new) => α = *new,
-            }
+            evaluation.change(change);
         }
 
-        Evaluation { α, ratings }
+        evaluation
     }
 
     pub fn add_player(&mut self, name: String, rating: f64) {
@@ -174,6 +160,16 @@ pub enum Change {
     AdjustAlpha(f64),
 }
 
+impl Change {
+    pub fn date(&self) -> Option<&chrono::NaiveDate> {
+        match self {
+            Change::AddPlayer(_) => None,
+            Change::Play(play) => Some(&play.date),
+            Change::AdjustAlpha(_) => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct AddPlayer {
     pub name: String,
@@ -208,9 +204,17 @@ pub struct Outcome {
 pub struct Evaluation {
     pub α: f64,
     pub ratings: HashMap<String, f64>,
+    pub last_date: Option<chrono::NaiveDate>,
 }
 
 impl Evaluation {
+    pub fn new(α: f64) -> Self {
+        Evaluation {
+            α,
+            ..Default::default()
+        }
+    }
+
     pub fn matching_names<'s>(&'s self, pattern: &'s str) -> Vec<&'s str> {
         if self.ratings.keys().any(|name| name == pattern) {
             return vec![pattern];
@@ -221,6 +225,32 @@ impl Evaluation {
             .filter(|name| match_names(name, pattern))
             .map(|name| name.as_str())
             .collect()
+    }
+
+    pub fn change(&mut self, change: &Change) {
+        match change {
+            Change::AddPlayer(addition) => {
+                self.ratings.insert(addition.name.clone(), addition.rating);
+            }
+            Change::Play(play) => {
+                let selected_ratings: [f64; 3] = play
+                    .outcomes
+                    .clone()
+                    .map(|outcome| self.ratings[&outcome.player]);
+                let scores = play.outcomes.clone().map(|outcome| outcome.score);
+                let new_ratings = rating_change(self.α, play.game_count, selected_ratings, scores);
+                
+                self.last_date = Some(match self.last_date {
+                    None => play.date,
+                    Some(last_date) => play.date.max(last_date),
+                });
+
+                for i in 0..3 {
+                    *self.ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
+                }
+            }
+            Change::AdjustAlpha(new) => self.α = *new,
+        }
     }
 }
 

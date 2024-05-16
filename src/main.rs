@@ -1,12 +1,10 @@
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
-    io,
-    path::{Path, PathBuf},
-    process,
+    fs, io, iter, path::{Path, PathBuf}, process
 };
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 /// Ulti rating calculator
 ///
@@ -61,6 +59,7 @@ enum Command {
     /// Renames a player to a new name, also allows merging players
     #[command(visible_alias = "rename")]
     RenamePlayer(RenamePlayer),
+    ExportRatings(ExportRatings),
 }
 
 #[derive(Debug, Parser)]
@@ -139,6 +138,28 @@ struct Undo {
     #[arg(short = 'n', long, action)]
     no_confirm: bool,
 }
+
+
+#[derive(Debug, Parser)]
+struct ExportRatings {
+    file: PathBuf,
+    /// Sets the name 
+    #[arg(default_value = "datum")]
+    datum_name: String,
+    /// Use a decimal comma instead of decimal point
+    #[arg(short = 'c', long, action)]
+    decimal_comma: bool,
+    #[arg(short = 'b', long)]
+    basis: ExportRatingsBasis,
+}
+
+#[derive(Debug, ValueEnum, Clone, Copy)]
+enum ExportRatingsBasis {
+    Date,
+    Play,
+    Game,
+}
+
 
 fn play(path: &Path, play: Play) {
     let mut data = read_data(path);
@@ -319,6 +340,88 @@ fn rename_player(path: &Path, rename: RenamePlayer) {
     println!("Renamed {old_name} to {}", rename.new_name);
 }
 
+fn export_ratings(path: &Path, export: ExportRatings) {
+    let data = read_data(path);
+
+    let mut names: Vec<String> = data
+        .evaluate()
+        .ratings
+        .into_keys()
+        .collect();
+
+    names.sort();
+
+    let mut rows: Vec<Vec<String>> = Vec::new();
+
+    // header
+    rows.push(iter::once(export.datum_name).chain(names.iter().cloned()).collect());
+
+    let mut evaluation = data.starting_evaluation();
+
+    let add_row_by_evaluation = |rows: &mut Vec<Vec<String>>, header_column: String, evaluation: &mut ultira::Evaluation| {
+        rows.push(
+            iter::once(header_column)
+                .chain(names.iter().map(|name| match evaluation.ratings.get(name) {
+                    Some(rating) => {
+                        let rating = data.config.rating_to_display(*rating).to_string();
+
+                        if export.decimal_comma {
+                            rating.replacen('.', ",", 1)
+                        } else {
+                            rating
+                        }
+                    },
+                    None => "".to_string(),
+                }))
+                .collect()
+        );
+    };
+
+    match export.basis {
+        ExportRatingsBasis::Date => {
+            for change in data.history {
+                if let Some(date) = change.date() {
+                    if let Some(last_date) = evaluation.last_date {
+                        if *date > last_date {
+                            add_row_by_evaluation(&mut rows, last_date.to_string(), &mut evaluation);
+                        }
+                    }
+                }
+                
+                evaluation.change(&change);
+            }
+
+            if let Some(last_date) = evaluation.last_date {
+                add_row_by_evaluation(&mut rows, last_date.to_string(), &mut evaluation);
+            }
+        }
+        ExportRatingsBasis::Play => {
+            for change in data.history {
+                evaluation.change(&change);
+
+                if let ultira::Change::Play(play) = change {
+                    add_row_by_evaluation(&mut rows, play.date.to_string(), &mut evaluation);
+                }
+            }
+        },
+        ExportRatingsBasis::Game => {
+            for change in data.history {
+                match change {
+                    ultira::Change::Play(play) => {
+                        todo!()
+                    }
+                    _ => evaluation.change(&change),
+                }
+            }
+        },
+    }
+
+    let rows: Vec<_> = rows.into_iter().map(|row| row.join("\t")).collect();
+    let output = rows.join("\n");
+
+    fs::write(export.file, output).unwrap();
+}
+
 fn main() {
     let args: Cli = Cli::parse();
 
@@ -330,6 +433,7 @@ fn main() {
         Command::Config(a) => adjust(&args.file, a.param),
         Command::Undo(p) => undo(&args.file, p),
         Command::RenamePlayer(p) => rename_player(&args.file, p),
+        Command::ExportRatings(p) => export_ratings(&args.file, p),
     }
 }
 
