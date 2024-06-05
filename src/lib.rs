@@ -255,7 +255,7 @@ pub struct ArbitraryOutcomes {
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct GameCollection {
     pub players: [String; 2],
-    pub game_count: i64,
+    pub game_count: usize,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]

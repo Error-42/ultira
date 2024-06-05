@@ -1,9 +1,7 @@
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
-    fs, io, iter,
-    path::{Path, PathBuf},
-    process,
+    collections::HashMap, fs, io, iter, path::{Path, PathBuf}, process
 };
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -39,6 +37,9 @@ enum Command {
     /// Each play has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
     #[command(visible_alias = "p")]
     Play(Play),
+    /// TODO
+    #[command(visible_alias = "a")]
+    Arbitrary(Arbitrary),
     /// Create or clear the file
     New(New),
     /// Add a new player; if the player already exists, their rating will be overriden.
@@ -61,6 +62,7 @@ enum Command {
     /// Renames a player to a new name, also allows merging players
     #[command(visible_alias = "rename")]
     RenamePlayer(RenamePlayer),
+    /// TODO
     ExportRatings(ExportRatings),
 }
 
@@ -86,6 +88,29 @@ struct Play {
     /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
+}
+
+#[derive(Debug, Parser)]
+struct Arbitrary {
+    /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
+    #[arg(short = 'd', long)]
+    date: Option<chrono::NaiveDate>,
+}
+
+#[derive(Debug, Parser)]
+#[command(no_binary_name = true)]
+struct ArbitraryScore {
+    player: String,
+    #[arg(allow_hyphen_values = true)]
+    score: i64,
+}
+
+#[derive(Debug, Parser)]
+#[command(no_binary_name = true)]
+struct ArbitraryGameCollection {
+    player_1: String,
+    player_2: String,
+    games: usize,
 }
 
 #[derive(Debug, Parser)]
@@ -221,6 +246,63 @@ fn play(path: &Path, play: Play) {
     }
 
     ultira::write_data(path, &data).unwrap();
+}
+
+fn arbitrary(path: &Path, _param: Arbitrary) {
+    let data = read_data(&path);
+
+    println!("Input the scores of players!");
+
+    let mut score: HashMap<String, i64> = HashMap::new();
+
+    loop {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = ArbitraryScore::parse_from(splitty::split_unquoted_whitespace(input));
+        let Some(player) = try_find_name(&data, &param.player) else {
+            continue;
+        };
+
+        *score.entry(player).or_insert(0) += param.score;
+    }
+
+    println!("Input games!");
+
+    let mut game_collections = Vec::new();
+
+    loop {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = ArbitraryGameCollection::parse_from(splitty::split_unquoted_whitespace(input));
+        let players = [param.player_1, param.player_2];
+        let players: Option<[String; 2]> = players
+            .map(|player| try_find_name(&data, &player))
+            .into_iter()
+            .collect::<Option<Vec<_>>>()
+            .and_then(|v| v.try_into().ok());
+        let Some(players) = players else {
+            continue;
+        };
+
+        game_collections.push(ultira::GameCollection {
+            players,
+            game_count: param.games,
+        });
+    }
+
+    todo!()
 }
 
 fn new(path: &Path, param: New) {
@@ -434,6 +516,7 @@ fn main() {
 
     match args.command {
         Command::Play(p) => play(&args.file, p),
+        Command::Arbitrary(p) => arbitrary(&args.file, p),
         Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),

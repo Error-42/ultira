@@ -10,5 +10,6 @@ chrono = { version = "0.4.35", features = ["serde"] }
 clap = { version = "4.5.1", features = ["derive"] }
 nalgebra = "0.32.5"
 serde = { version = "1.0.197", features = ["derive"] }
+splitty = "1.0.1"
 toml = "0.8.10"
 toml-datetime-compat = { version = "0.3.0", features = ["chrono"] }
