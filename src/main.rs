@@ -1,7 +1,9 @@
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
-    fs, io, iter, path::{Path, PathBuf}, process
+    fs, io, iter,
+    path::{Path, PathBuf},
+    process,
 };
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -139,11 +141,10 @@ struct Undo {
     no_confirm: bool,
 }
 
-
 #[derive(Debug, Parser)]
 struct ExportRatings {
     file: PathBuf,
-    /// Sets the name 
+    /// Sets the name
     #[arg(default_value = "datum")]
     datum_name: String,
     /// Use a decimal comma instead of decimal point
@@ -159,7 +160,6 @@ enum ExportRatingsBasis {
     Play,
     Game,
 }
-
 
 fn play(path: &Path, play: Play) {
     let mut data = read_data(path);
@@ -343,39 +343,42 @@ fn rename_player(path: &Path, rename: RenamePlayer) {
 fn export_ratings(path: &Path, export: ExportRatings) {
     let data = read_data(path);
 
-    let mut names: Vec<String> = data
-        .evaluate()
-        .ratings
-        .into_keys()
-        .collect();
+    let mut names: Vec<String> = data.evaluate().ratings.into_keys().collect();
 
     names.sort();
 
     let mut rows: Vec<Vec<String>> = Vec::new();
 
     // header
-    rows.push(iter::once(export.datum_name).chain(names.iter().cloned()).collect());
+    rows.push(
+        iter::once(export.datum_name)
+            .chain(names.iter().cloned())
+            .collect(),
+    );
 
     let mut evaluation = data.starting_evaluation();
 
-    let add_row_by_evaluation = |rows: &mut Vec<Vec<String>>, header_column: String, evaluation: &mut ultira::Evaluation| {
-        rows.push(
-            iter::once(header_column)
-                .chain(names.iter().map(|name| match evaluation.ratings.get(name) {
-                    Some(rating) => {
-                        let rating = data.config.rating_to_display(*rating).to_string();
+    let add_row_by_evaluation =
+        |rows: &mut Vec<Vec<String>>,
+         header_column: String,
+         evaluation: &mut ultira::Evaluation| {
+            rows.push(
+                iter::once(header_column)
+                    .chain(names.iter().map(|name| match evaluation.ratings.get(name) {
+                        Some(rating) => {
+                            let rating = data.config.rating_to_display(*rating).to_string();
 
-                        if export.decimal_comma {
-                            rating.replacen('.', ",", 1)
-                        } else {
-                            rating
+                            if export.decimal_comma {
+                                rating.replacen('.', ",", 1)
+                            } else {
+                                rating
+                            }
                         }
-                    },
-                    None => "".to_string(),
-                }))
-                .collect()
-        );
-    };
+                        None => "".to_string(),
+                    }))
+                    .collect(),
+            );
+        };
 
     match export.basis {
         ExportRatingsBasis::Date => {
@@ -383,11 +386,15 @@ fn export_ratings(path: &Path, export: ExportRatings) {
                 if let Some(date) = change.date() {
                     if let Some(last_date) = evaluation.last_date {
                         if *date > last_date {
-                            add_row_by_evaluation(&mut rows, last_date.to_string(), &mut evaluation);
+                            add_row_by_evaluation(
+                                &mut rows,
+                                last_date.to_string(),
+                                &mut evaluation,
+                            );
                         }
                     }
                 }
-                
+
                 evaluation.change(&change);
             }
 
@@ -403,17 +410,17 @@ fn export_ratings(path: &Path, export: ExportRatings) {
                     add_row_by_evaluation(&mut rows, play.date.to_string(), &mut evaluation);
                 }
             }
-        },
+        }
         ExportRatingsBasis::Game => {
             for change in data.history {
                 match change {
-                    ultira::Change::Play(play) => {
+                    ultira::Change::Play(_play) => {
                         todo!()
                     }
                     _ => evaluation.change(&change),
                 }
             }
-        },
+        }
     }
 
     let rows: Vec<_> = rows.into_iter().map(|row| row.join("\t")).collect();

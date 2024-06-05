@@ -2,6 +2,7 @@
 //! Only the binary may be stable, the library cannot!
 use std::{collections::HashMap, error::Error, fs, path::Path};
 
+use nalgebra::{DMatrix, DVector};
 use serde::{Deserialize, Serialize};
 
 pub fn read_data(path: &Path) -> Result<Data, Box<dyn Error>> {
@@ -20,9 +21,36 @@ pub fn update3(α: f64, games: f64, rating: f64, avg_rating: f64, avg_score: f64
     (rating - avg_rating - avg_score) * f64::exp(-α * games) + avg_rating + avg_score
 }
 
+pub fn update_n(
+    α: f64,
+    games: f64,
+    rating: f64,
+    avg_rating: f64,
+    total_score: f64,
+    player_count: f64,
+) -> f64 {
+    let offset = avg_rating + 3.0 / player_count / (player_count - 2.0) * total_score;
+
+    (rating - offset) * (-player_count * (player_count - 2.0) / 3.0 * α * games).exp() + offset
+}
+
+pub fn update_generic(
+    α: f64,
+    laplace_matrix: DMatrix<f64>,
+    starting_ratings: DVector<f64>,
+    scores: DVector<f64>,
+    eps: f64,
+) -> Result<DVector<f64>, &'static str> {
+    let steady_state = -laplace_matrix.clone().pseudo_inverse(eps)? * scores;
+
+    Ok((starting_ratings - steady_state.clone()) * (laplace_matrix * α / 3.0).exp() + steady_state)
+}
+
 /// Returns the final ratings
 ///
 /// ```
+/// // TODO: fix this not working!
+///
 /// use ultira::rating_change;
 ///
 /// let α = 0.1;
@@ -113,6 +141,7 @@ impl Data {
                         }
                     }
                 }
+                Change::RatingPeriod(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }
         }
@@ -154,12 +183,14 @@ impl Config {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum Change {
     AddPlayer(AddPlayer),
+    // TODO: remove?
     Play(Play),
+    RatingPeriod(RatingPeriod),
     AdjustAlpha(f64),
 }
 
@@ -168,6 +199,7 @@ impl Change {
         match self {
             Change::AddPlayer(_) => None,
             Change::Play(play) => Some(&play.date),
+            Change::RatingPeriod(period) => Some(&period.date),
             Change::AdjustAlpha(_) => None,
         }
     }
@@ -201,6 +233,29 @@ impl Play {
 pub struct Outcome {
     pub player: String,
     pub score: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct RatingPeriod {
+    pub date: chrono::NaiveDate,
+    pub outcomes: Outcomes,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub enum Outcomes {
+    Arbitrary(ArbitraryOutcomes),
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
+pub struct ArbitraryOutcomes {
+    pub scores: HashMap<String, i64>,
+    pub game_collections: Vec<GameCollection>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
+pub struct GameCollection {
+    pub players: [String; 2],
+    pub game_count: i64,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -242,7 +297,7 @@ impl Evaluation {
                     .map(|outcome| self.ratings[&outcome.player]);
                 let scores = play.outcomes.clone().map(|outcome| outcome.score);
                 let new_ratings = rating_change(self.α, play.game_count, selected_ratings, scores);
-                
+
                 self.last_date = Some(match self.last_date {
                     None => play.date,
                     Some(last_date) => play.date.max(last_date),
@@ -252,7 +307,63 @@ impl Evaluation {
                     *self.ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
                 }
             }
+            Change::RatingPeriod(period) => {
+                match &period.outcomes {
+                    Outcomes::Arbitrary(outcomes) => self.apply_arbtrarity_outcomes(outcomes),
+                }
+
+                self.last_date = Some(match self.last_date {
+                    None => period.date,
+                    Some(last_date) => period.date.max(last_date),
+                });
+            }
             Change::AdjustAlpha(new) => self.α = *new,
+        }
+    }
+
+    pub fn apply_arbtrarity_outcomes(&mut self, outcomes: &ArbitraryOutcomes) {
+        let player_index_pairs: Vec<(&String, &i64)> = outcomes.scores.iter().collect();
+        let player_to_index: HashMap<&String, usize> = player_index_pairs
+            .iter()
+            .enumerate()
+            .map(|(i, (player, _score))| (*player, i))
+            .collect();
+
+        let initial_ratings: DVector<f64> = DVector::from_iterator(
+            player_index_pairs.len(),
+            player_index_pairs
+                .iter()
+                .map(|(player, _score)| self.ratings[*player]),
+        );
+
+        let matrix: DMatrix<f64> = {
+            let mut matrix = DMatrix::zeros(player_index_pairs.len(), player_index_pairs.len());
+
+            for game_collection in &outcomes.game_collections {
+                let i0 = player_to_index[&game_collection.players[0]];
+                let i1 = player_to_index[&game_collection.players[1]];
+
+                matrix[(i0, i1)] += game_collection.game_count as f64;
+                matrix[(i1, i0)] += game_collection.game_count as f64;
+
+                matrix[(i0, i0)] -= game_collection.game_count as f64;
+                matrix[(i1, i1)] -= game_collection.game_count as f64;
+            }
+
+            matrix
+        };
+
+        let scores: DVector<f64> = DVector::from_iterator(
+            player_index_pairs.len(),
+            player_index_pairs
+                .iter()
+                .map(|(_player, score)| **score as f64),
+        );
+
+        let new_ratings = update_generic(self.α, matrix, initial_ratings, scores, 1e-6).unwrap();
+
+        for i in 0..player_index_pairs.len() {
+            *self.ratings.get_mut(player_index_pairs[i].0).unwrap() = new_ratings[i];
         }
     }
 }
