@@ -54,6 +54,8 @@ enum Command {
     Config(Config),
     /// Undoes last command which affected history.
     ///
+    /// TODO! update this when finished developing new capabilities
+    /// 
     /// These are
     /// - play
     /// - add-player
@@ -100,7 +102,9 @@ struct Arbitrary {
 #[derive(Debug, Parser)]
 #[command(no_binary_name = true)]
 struct ArbitraryScore {
+    /// TODO
     player: String,
+    /// TODO
     #[arg(allow_hyphen_values = true)]
     score: i64,
 }
@@ -108,8 +112,11 @@ struct ArbitraryScore {
 #[derive(Debug, Parser)]
 #[command(no_binary_name = true)]
 struct ArbitraryGameCollection {
+    /// TODO
     player_1: String,
+    /// TODO
     player_2: String,
+    /// TODO
     games: usize,
 }
 
