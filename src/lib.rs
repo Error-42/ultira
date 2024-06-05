@@ -16,6 +16,10 @@ pub fn write_data(path: &Path, data: &Data) -> Result<(), Box<dyn Error>> {
     Ok(fs::write(path, str)?)
 }
 
+pub fn update3(α: f64, games: f64, rating: f64, avg_rating: f64, avg_score: f64) -> f64 {
+    (rating - avg_rating - avg_score) * f64::exp(-α * games) + avg_rating + avg_score
+}
+
 /// Returns the final ratings
 ///
 /// ```
@@ -42,10 +46,9 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3])
     for i in 0..3 {
         let r_i = ratings[i];
         let r_avg = average_rating;
-        let g = games as i32;
         let s_i_avg = scores[i] as f64 / games as f64;
 
-        new_ratings[i] = (1.0 - α).powi(g) * r_i + (r_avg + s_i_avg) * (1.0 - (1.0 - α).powi(g));
+        new_ratings[i] = update3(α, games as f64, r_i, r_avg, s_i_avg);
 
         assert!(new_ratings[i].is_finite());
     }
