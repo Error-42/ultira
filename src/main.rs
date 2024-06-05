@@ -255,12 +255,12 @@ fn play(path: &Path, play: Play) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn arbitrary(path: &Path, _param: Arbitrary) {
-    let data = read_data(&path);
+fn arbitrary(path: &Path, param: Arbitrary) {
+    let mut data = read_data(path);
 
     println!("Input the scores of players!");
 
-    let mut score: HashMap<String, i64> = HashMap::new();
+    let mut scores: HashMap<String, i64> = HashMap::new();
 
     loop {
         let mut input = String::new();
@@ -276,7 +276,7 @@ fn arbitrary(path: &Path, _param: Arbitrary) {
             continue;
         };
 
-        *score.entry(player).or_insert(0) += param.score;
+        *scores.entry(player).or_insert(0) += param.score;
     }
 
     println!("Input games!");
@@ -309,7 +309,29 @@ fn arbitrary(path: &Path, _param: Arbitrary) {
         });
     }
 
-    todo!()
+    let period = ultira::RatingPeriod {
+        date: param.date.unwrap_or_else(|| chrono::Local::now().date_naive()),
+        outcomes: ultira::Outcomes::Arbitrary(ultira::ArbitraryOutcomes {
+            scores: scores.clone(),
+            game_collections,
+        })
+    };
+
+    let eval_before = data.evaluate();
+    
+    data.rating_period(period);
+
+    // Maybe don't recalculate the whole thing?
+    let eval_after = data.evaluate();
+
+    for player in scores.keys() {
+        println!(
+            "{}: {:.1} -> {:.1}",
+            player,
+            data.config.rating_to_display(eval_before.ratings[player]),
+            data.config.rating_to_display(eval_after.ratings[player]),
+        );
+    }    
 }
 
 fn new(path: &Path, param: New) {

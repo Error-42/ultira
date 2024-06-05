@@ -41,9 +41,9 @@ pub fn update_generic(
     scores: DVector<f64>,
     eps: f64,
 ) -> Result<DVector<f64>, &'static str> {
-    let steady_state = -laplace_matrix.clone().pseudo_inverse(eps)? * scores;
+    let steady_state = -3.0 * laplace_matrix.clone().pseudo_inverse(eps)? * scores;
 
-    Ok((starting_ratings - steady_state.clone()) * (laplace_matrix * α / 3.0).exp() + steady_state)
+    Ok((laplace_matrix * α / 3.0).exp() * (starting_ratings - steady_state.clone()) + steady_state)
 }
 
 /// Returns the final ratings
@@ -116,6 +116,10 @@ impl Data {
 
     pub fn play(&mut self, play: Play) {
         self.history.push(Change::Play(play));
+    }
+
+    pub fn rating_period(&mut self, period: RatingPeriod) {
+        self.history.push(Change::RatingPeriod(period))
     }
 
     pub fn adjust_α(&mut self, new: f64) {
