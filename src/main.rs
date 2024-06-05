@@ -331,7 +331,9 @@ fn arbitrary(path: &Path, param: Arbitrary) {
             data.config.rating_to_display(eval_before.ratings[player]),
             data.config.rating_to_display(eval_after.ratings[player]),
         );
-    }    
+    }
+
+    ultira::write_data(path, &data).unwrap();
 }
 
 fn new(path: &Path, param: New) {
