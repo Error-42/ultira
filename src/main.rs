@@ -548,7 +548,7 @@ fn try_find_name(data: &ultira::Data, name: &str) -> Option<String> {
         }
         1 => Some(matches[0].to_owned()),
         _ => {
-            println!("Name '{name}' match multiple names, aborting. Matched names are:");
+            println!("Name '{name}' matched multiple names, aborting. Matched names are:");
             for name in matches {
                 println!("{name}");
             }
