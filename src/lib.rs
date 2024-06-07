@@ -1,6 +1,6 @@
 #![allow(mixed_script_confusables)]
 //! Only the binary may be stable, the library cannot!
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use std::{collections::HashMap, error::Error, fs, path::Path, thread::scope};
 
 use nalgebra::{DMatrix, DVector};
 use serde::{Deserialize, Serialize};
@@ -147,6 +147,7 @@ impl Data {
                 }
                 Change::Arbitrary(_) => todo!(),
                 Change::Circular(_) => todo!(),
+                Change::Symmetric(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }
         }
@@ -196,6 +197,7 @@ pub enum Change {
     Play(Play),
     Arbitrary(Arbitrary),
     Circular(Circular),
+    Symmetric(Symmetric),
     AdjustAlpha(f64),
 }
 
@@ -206,6 +208,7 @@ impl Change {
             Change::Play(play) => Some(&play.date),
             Change::Arbitrary(arbitrary) => Some(&arbitrary.date),
             Change::Circular(circular) => Some(&circular.date),
+            Change::Symmetric(symmetric) => Some(&symmetric.date),
             Change::AdjustAlpha(_) => None,
         }
     }
@@ -217,7 +220,7 @@ pub struct AddPlayer {
     pub rating: f64,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Deserialize, Serialize)]
 pub struct Play {
     pub game_count: usize,
     #[serde(with = "toml_datetime_compat")]
@@ -246,7 +249,7 @@ pub struct Outcome {
     pub score: i64,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Arbitrary {
     pub date: chrono::NaiveDate,
     // See play.date for why this type is used.
@@ -266,6 +269,14 @@ pub struct Circular {
     // See play.date for why this type is used.
     pub outcomes: Vec<Outcome>,
     pub game_count: usize,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
+/// Must contain at leats 1 player, but probably should contain at least 3. TODO: check this?
+pub struct Symmetric {
+    pub date: chrono::NaiveDate,
+    pub scores: HashMap<String, i64>,
+    pub round_count: usize,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -319,6 +330,19 @@ impl Evaluation {
             }
             Change::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
             Change::Circular(circular) => self.apply_circular_outcomes(circular),
+            Change::Symmetric(symmetric) => {
+                assert_ne!(symmetric.scores.len(), 0);
+
+                let rating_sum: f64 = symmetric
+                    .scores
+                    .keys()
+                    .map(|player| self.ratings[player])
+                    .sum();
+
+                let average_rating: f64 = rating_sum / symmetric.scores.len() as f64;
+
+                todo!()
+            }
             Change::AdjustAlpha(new) => self.α = *new,
         }
 
