@@ -261,7 +261,8 @@ fn play(path: &Path, play: Play) {
 fn arbitrary(path: &Path, param: Arbitrary) {
     let mut data = read_data(path);
 
-    println!("Input the scores of players!");
+    // TODO: better prompts
+    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
 
     let mut scores: HashMap<String, i64> = HashMap::new();
 
@@ -282,7 +283,7 @@ fn arbitrary(path: &Path, param: Arbitrary) {
         *scores.entry(player).or_insert(0) += param.score;
     }
 
-    println!("Input games!");
+    println!("Input the number of games between players! One per line: <player_1> <player_2> <games>. Write an empty line when complete.");
 
     let mut game_collections = Vec::new();
 
