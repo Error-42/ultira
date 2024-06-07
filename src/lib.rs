@@ -224,7 +224,7 @@ pub struct Play {
     #[serde(with = "toml_datetime_compat")]
     pub date: chrono::NaiveDate,
     // On the difference between `[Outcome]` and `HashMap<String, i64>`: since keys aren't ordered in toml, the players in `HashMap<String, i64>` aren't ordered. When order is needed, `[Outcome]` must be used, but otherwise `HashMap<String, i64>` is used for simplicity.
-    // 
+    //
     // Here, a HashMap<String, i64> would be enough. But this is kept for legacy.
     //
     // TODO: think about whether everything should use `[Outcome]` for consistency.
@@ -376,7 +376,8 @@ impl Evaluation {
     pub fn apply_circular_outcomes(&mut self, circular: &Circular) {
         let initial_ratings: DVector<f64> = DVector::from_iterator(
             circular.outcomes.len(),
-            circular.outcomes
+            circular
+                .outcomes
                 .iter()
                 .map(|outcome| self.ratings[&outcome.player]),
         );
@@ -388,7 +389,7 @@ impl Evaluation {
             for i in 0..circular.game_count {
                 for d0 in 0..3 {
                     let j0 = (i + d0) % circular.outcomes.len();
-                    
+
                     for d1 in 0..3 {
                         let j1 = (i + d1) % circular.outcomes.len();
 
@@ -402,9 +403,7 @@ impl Evaluation {
 
         let scores: DVector<f64> = DVector::from_iterator(
             circular.outcomes.len(),
-            circular.outcomes
-                .iter()
-                .map(|outcome| outcome.score as f64),
+            circular.outcomes.iter().map(|outcome| outcome.score as f64),
         );
 
         let new_ratings = update_generic(self.α, matrix, initial_ratings, scores, 1e-6).unwrap();
