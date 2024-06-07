@@ -118,8 +118,8 @@ impl Data {
         self.history.push(Change::Play(play));
     }
 
-    pub fn rating_period(&mut self, period: RatingPeriod) {
-        self.history.push(Change::RatingPeriod(period))
+    pub fn arbitrary(&mut self, arbitrary: Arbitrary) {
+        self.history.push(Change::Arbitrary(arbitrary))
     }
 
     pub fn adjust_α(&mut self, new: f64) {
@@ -145,7 +145,7 @@ impl Data {
                         }
                     }
                 }
-                Change::RatingPeriod(_) => todo!(),
+                Change::Arbitrary(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }
         }
@@ -194,7 +194,7 @@ pub enum Change {
     AddPlayer(AddPlayer),
     // TODO: remove?
     Play(Play),
-    RatingPeriod(RatingPeriod),
+    Arbitrary(Arbitrary),
     AdjustAlpha(f64),
 }
 
@@ -203,7 +203,7 @@ impl Change {
         match self {
             Change::AddPlayer(_) => None,
             Change::Play(play) => Some(&play.date),
-            Change::RatingPeriod(period) => Some(&period.date),
+            Change::Arbitrary(arbitrary) => Some(&arbitrary.date),
             Change::AdjustAlpha(_) => None,
         }
     }
@@ -239,19 +239,9 @@ pub struct Outcome {
     pub score: i64,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct RatingPeriod {
-    pub date: chrono::NaiveDate,
-    pub outcomes: Outcomes,
-}
-
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub enum Outcomes {
-    Arbitrary(ArbitraryOutcomes),
-}
-
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
-pub struct ArbitraryOutcomes {
+pub struct Arbitrary {
+    pub date: chrono::NaiveDate,
     pub scores: HashMap<String, i64>,
     pub game_collections: Vec<GameCollection>,
 }
@@ -311,21 +301,15 @@ impl Evaluation {
                     *self.ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
                 }
             }
-            Change::RatingPeriod(period) => {
-                match &period.outcomes {
-                    Outcomes::Arbitrary(outcomes) => self.apply_arbtrarity_outcomes(outcomes),
-                }
-
-                self.last_date = Some(match self.last_date {
-                    None => period.date,
-                    Some(last_date) => period.date.max(last_date),
-                });
-            }
+            Change::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
             Change::AdjustAlpha(new) => self.α = *new,
         }
+
+        // `Some(x) > None`, so this code will handle `None`s correctly.
+        self.last_date = self.last_date.max(change.date().copied());
     }
 
-    pub fn apply_arbtrarity_outcomes(&mut self, outcomes: &ArbitraryOutcomes) {
+    pub fn apply_arbtrarity_outcomes(&mut self, outcomes: &Arbitrary) {
         let player_index_pairs: Vec<(&String, &i64)> = outcomes.scores.iter().collect();
         let player_to_index: HashMap<&String, usize> = player_index_pairs
             .iter()

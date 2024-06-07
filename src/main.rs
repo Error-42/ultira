@@ -309,17 +309,15 @@ fn arbitrary(path: &Path, param: Arbitrary) {
         });
     }
 
-    let period = ultira::RatingPeriod {
+    let arbitrary = ultira::Arbitrary {
         date: param.date.unwrap_or_else(|| chrono::Local::now().date_naive()),
-        outcomes: ultira::Outcomes::Arbitrary(ultira::ArbitraryOutcomes {
-            scores: scores.clone(),
-            game_collections,
-        })
+        scores: scores.clone(),
+        game_collections,
     };
 
     let eval_before = data.evaluate();
     
-    data.rating_period(period);
+    data.arbitrary(arbitrary);
 
     // Maybe don't recalculate the whole thing?
     let eval_after = data.evaluate();
