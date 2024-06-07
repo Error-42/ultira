@@ -189,7 +189,6 @@ impl Config {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-#[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum Change {
     AddPlayer(AddPlayer),
