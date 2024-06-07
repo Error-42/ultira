@@ -146,6 +146,7 @@ impl Data {
                     }
                 }
                 Change::Arbitrary(_) => todo!(),
+                Change::Circular(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }
         }
@@ -195,6 +196,7 @@ pub enum Change {
     // TODO: remove?
     Play(Play),
     Arbitrary(Arbitrary),
+    Circular(Circular),
     AdjustAlpha(f64),
 }
 
@@ -204,6 +206,7 @@ impl Change {
             Change::AddPlayer(_) => None,
             Change::Play(play) => Some(&play.date),
             Change::Arbitrary(arbitrary) => Some(&arbitrary.date),
+            Change::Circular(circular) => Some(&circular.date),
             Change::AdjustAlpha(_) => None,
         }
     }
@@ -220,6 +223,11 @@ pub struct Play {
     pub game_count: usize,
     #[serde(with = "toml_datetime_compat")]
     pub date: chrono::NaiveDate,
+    // On the difference between `[Outcome]` and `HashMap<String, i64>`: since keys aren't ordered in toml, the players in `HashMap<String, i64>` aren't ordered. When order is needed, `[Outcome]` must be used, but otherwise `HashMap<String, i64>` is used for simplicity.
+    // 
+    // Here, a HashMap<String, i64> would be enough. But this is kept for legacy.
+    //
+    // TODO: think about whether everything should use `[Outcome]` for consistency.
     pub outcomes: [Outcome; 3],
 }
 
@@ -233,7 +241,7 @@ impl Play {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct Outcome {
     pub player: String,
     pub score: i64,
@@ -242,6 +250,7 @@ pub struct Outcome {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct Arbitrary {
     pub date: chrono::NaiveDate,
+    // See play.date for why this type is used.
     pub scores: HashMap<String, i64>,
     pub game_collections: Vec<GameCollection>,
 }
@@ -249,6 +258,14 @@ pub struct Arbitrary {
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct GameCollection {
     pub players: [String; 2],
+    pub game_count: usize,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
+pub struct Circular {
+    pub date: chrono::NaiveDate,
+    // See play.date for why this type is used.
+    pub outcomes: Vec<Outcome>,
     pub game_count: usize,
 }
 
@@ -302,6 +319,7 @@ impl Evaluation {
                 }
             }
             Change::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
+            Change::Circular(circular) => self.apply_circular_outcomes(circular),
             Change::AdjustAlpha(new) => self.α = *new,
         }
 
@@ -353,6 +371,17 @@ impl Evaluation {
         for i in 0..player_index_pairs.len() {
             *self.ratings.get_mut(player_index_pairs[i].0).unwrap() = new_ratings[i];
         }
+    }
+
+    pub fn apply_circular_outcomes(&mut self, circular: &Circular) {
+        let initial_ratings: DVector<f64> = DVector::from_iterator(
+            circular.outcomes.len(),
+            circular.outcomes
+                .iter()
+                .map(|outcome| self.ratings[&outcome.player]),
+        );
+
+        todo!()
     }
 }
 
