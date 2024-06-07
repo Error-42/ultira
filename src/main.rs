@@ -1,7 +1,10 @@
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
-    collections::HashMap, fs, io, iter, path::{Path, PathBuf}, process
+    collections::HashMap,
+    fs, io, iter,
+    path::{Path, PathBuf},
+    process,
 };
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -55,7 +58,7 @@ enum Command {
     /// Undoes last command which affected history.
     ///
     /// TODO! update this when finished developing new capabilities
-    /// 
+    ///
     /// These are
     /// - play
     /// - add-player
@@ -310,13 +313,15 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     }
 
     let arbitrary = ultira::Arbitrary {
-        date: param.date.unwrap_or_else(|| chrono::Local::now().date_naive()),
+        date: param
+            .date
+            .unwrap_or_else(|| chrono::Local::now().date_naive()),
         scores: scores.clone(),
         game_collections,
     };
 
     let eval_before = data.evaluate();
-    
+
     data.arbitrary(arbitrary);
 
     // Maybe don't recalculate the whole thing?
