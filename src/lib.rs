@@ -381,7 +381,37 @@ impl Evaluation {
                 .map(|outcome| self.ratings[&outcome.player]),
         );
 
-        todo!()
+        let matrix: DMatrix<f64> = {
+            let mut matrix = DMatrix::zeros(circular.outcomes.len(), circular.outcomes.len());
+
+            // This is very inefficient, but I'm too lazy to code this properly until it becomes a problem.
+            for i in 0..circular.game_count {
+                for d0 in 0..3 {
+                    let j0 = (i + d0) % circular.outcomes.len();
+                    
+                    for d1 in 0..3 {
+                        let j1 = (i + d1) % circular.outcomes.len();
+
+                        matrix[(j0, j1)] += if j0 == j1 { -2.0 } else { 1.0 };
+                    }
+                }
+            }
+
+            matrix
+        };
+
+        let scores: DVector<f64> = DVector::from_iterator(
+            circular.outcomes.len(),
+            circular.outcomes
+                .iter()
+                .map(|outcome| outcome.score as f64),
+        );
+
+        let new_ratings = update_generic(self.α, matrix, initial_ratings, scores, 1e-6).unwrap();
+
+        for i in 0..circular.outcomes.len() {
+            *self.ratings.get_mut(&circular.outcomes[i].player).unwrap() = new_ratings[i];
+        }
     }
 }
 
