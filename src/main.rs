@@ -174,7 +174,10 @@ impl FromArgMatches for PlayScoreArgs {
                 ));
             };
 
-            self.scores.push(ArbitraryScore { player: name.clone(), score })
+            self.scores.push(ArbitraryScore {
+                player: name.clone(),
+                score,
+            })
         }
 
         Ok(())
@@ -187,7 +190,7 @@ impl Args for PlayScoreArgs {
             Arg::new("scores")
                 .num_args(1..)
                 .required(true)
-                .allow_negative_numbers(true)
+                .allow_negative_numbers(true),
         )
     }
 
@@ -414,19 +417,25 @@ fn arbitrary(path: &Path, param: Arbitrary) {
 fn symmetric(path: &Path, param: Symmetric) {
     let mut data = read_data(path);
 
-    let Some(scores): Option<HashMap<String, i64>> = param.scores.scores.into_iter()
+    let Some(scores): Option<HashMap<String, i64>> = param
+        .scores
+        .scores
+        .into_iter()
         .map(|score| Some((try_find_name(&data, &score.player)?, score.score)))
-        .collect() else { return; };
+        .collect()
+    else {
+        return;
+    };
 
     let eval_before = data.evaluate();
 
-    data.symmetric(
-        ultira::Symmetric {
-            date: param.date.unwrap_or_else(|| chrono::Local::now().date_naive()),
-            scores: scores.clone(),
-            round_count: param.round_count,
-        }
-    );
+    data.symmetric(ultira::Symmetric {
+        date: param
+            .date
+            .unwrap_or_else(|| chrono::Local::now().date_naive()),
+        scores: scores.clone(),
+        round_count: param.round_count,
+    });
 
     let eval_after = data.evaluate();
 
@@ -706,12 +715,6 @@ fn confirm() -> bool {
     }
 }
 
-
 fn print_rating_change(player: &str, rating_before: f64, rating_after: f64) {
-    println!(
-        "{}: {:.1} -> {:.1}",
-        player,
-        rating_before,
-        rating_after,
-    );
+    println!("{}: {:.1} -> {:.1}", player, rating_before, rating_after,);
 }
