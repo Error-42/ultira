@@ -335,7 +335,7 @@ impl Evaluation {
             Change::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
             Change::Circular(circular) => self.apply_circular_outcomes(circular),
             Change::Symmetric(symmetric) => {
-                assert_ne!(symmetric.scores.len(), 0);
+                assert!(symmetric.scores.len() >= 3);
 
                 let rating_sum: f64 = symmetric
                     .scores
@@ -344,6 +344,23 @@ impl Evaluation {
                     .sum();
 
                 let average_rating: f64 = rating_sum / symmetric.scores.len() as f64;
+
+                let _new_ratings: Vec<(&String, f64)> = symmetric
+                    .scores
+                    .iter()
+                    .map(|(player, score)| {
+                        let new_rating = update_n(
+                            self.α,
+                            symmetric.round_count as f64,
+                            self.ratings[player],
+                            average_rating,
+                            *score as f64,
+                            symmetric.scores.len() as f64,
+                        );
+
+                        (player, new_rating)
+                    })
+                    .collect();
 
                 todo!()
             }
