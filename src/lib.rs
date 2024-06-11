@@ -119,11 +119,11 @@ impl Data {
     }
 
     pub fn arbitrary(&mut self, arbitrary: Arbitrary) {
-        self.history.push(Change::Arbitrary(arbitrary))
+        self.history.push(Change::Arbitrary(arbitrary));
     }
 
     pub fn symmetric(&mut self, symmetric: Symmetric) {
-        self.history.push(Change::Symmetric(symmetric))
+        self.history.push(Change::Symmetric(symmetric));
     }
 
     pub fn adjust_α(&mut self, new: f64) {
