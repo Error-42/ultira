@@ -122,6 +122,10 @@ impl Data {
         self.history.push(Change::Arbitrary(arbitrary))
     }
 
+    pub fn symmetric(&mut self, symmetric: Symmetric) {
+        self.history.push(Change::Symmetric(symmetric))
+    }
+
     pub fn adjust_α(&mut self, new: f64) {
         self.history.push(Change::AdjustAlpha(new));
     }

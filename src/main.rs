@@ -320,9 +320,8 @@ fn play(path: &Path, play: Play) {
     let eval_after = data.evaluate();
 
     for ultira::Outcome { player, score: _ } in play.outcomes {
-        println!(
-            "{}: {:.1} -> {:.1}",
-            player,
+        print_rating_change(
+            &player,
             data.config.rating_to_display(eval_before.ratings[&player]),
             data.config.rating_to_display(eval_after.ratings[&player]),
         );
@@ -402,12 +401,41 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     let eval_after = data.evaluate();
 
     for player in scores.keys() {
-        println!(
-            "{}: {:.1} -> {:.1}",
+        print_rating_change(
             player,
             data.config.rating_to_display(eval_before.ratings[player]),
             data.config.rating_to_display(eval_after.ratings[player]),
         );
+    }
+
+    ultira::write_data(path, &data).unwrap();
+}
+
+fn symmetric(path: &Path, param: Symmetric) {
+    let mut data = read_data(path);
+
+    let Some(scores): Option<HashMap<String, i64>> = param.scores.scores.into_iter()
+        .map(|score| Some((try_find_name(&data, &score.player)?, score.score)))
+        .collect() else { return; };
+
+    let eval_before = data.evaluate();
+
+    data.symmetric(
+        ultira::Symmetric {
+            date: param.date.unwrap_or_else(|| chrono::Local::now().date_naive()),
+            scores: scores.clone(),
+            round_count: param.round_count,
+        }
+    );
+
+    let eval_after = data.evaluate();
+
+    for player in scores.keys() {
+        print_rating_change(
+            player,
+            data.config.rating_to_display(eval_before.ratings[player]),
+            data.config.rating_to_display(eval_after.ratings[player]),
+        )
     }
 
     ultira::write_data(path, &data).unwrap();
@@ -625,7 +653,7 @@ fn main() {
     match args.command {
         Command::Play(p) => play(&args.file, p),
         Command::Arbitrary(p) => arbitrary(&args.file, p),
-        Command::Symmetric(p) => { dbg!(&p); },
+        Command::Symmetric(p) => symmetric(&args.file, p),
         Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
@@ -676,4 +704,14 @@ fn confirm() -> bool {
         println!("Confirmation didn't match 'y' or 'Y', aborting...");
         false
     }
+}
+
+
+fn print_rating_change(player: &str, rating_before: f64, rating_after: f64) {
+    println!(
+        "{}: {:.1} -> {:.1}",
+        player,
+        rating_before,
+        rating_after,
+    );
 }
