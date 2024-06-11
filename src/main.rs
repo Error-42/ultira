@@ -7,7 +7,7 @@ use std::{
     process,
 };
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Arg, Args, FromArgMatches, Parser, Subcommand, ValueEnum};
 
 /// Ulti rating calculator
 ///
@@ -43,6 +43,9 @@ enum Command {
     /// TODO
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
+    /// TODO,
+    #[command(visible_alias = "s")]
+    Symmetric(Symmetric),
     /// Create or clear the file
     New(New),
     /// Add a new player; if the player already exists, their rating will be overriden.
@@ -102,7 +105,7 @@ struct Arbitrary {
     date: Option<chrono::NaiveDate>,
 }
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Parser)]
 #[command(no_binary_name = true)]
 struct ArbitraryScore {
     /// TODO
@@ -121,6 +124,76 @@ struct ArbitraryGameCollection {
     player_2: String,
     /// TODO
     games: usize,
+}
+
+#[derive(Debug, Parser)]
+struct Symmetric {
+    /// TODO
+    round_count: usize,
+    /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
+    #[arg(short = 'd', long)]
+    date: Option<chrono::NaiveDate>,
+    /// TODO
+    #[command(flatten)]
+    scores: PlayScoreArgs,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct PlayScoreArgs {
+    scores: Vec<ArbitraryScore>,
+}
+
+// TODO: get these close to official style
+impl FromArgMatches for PlayScoreArgs {
+    fn from_arg_matches(matches: &clap::ArgMatches) -> Result<Self, clap::Error> {
+        let mut ret = PlayScoreArgs::default();
+        ret.update_from_arg_matches(matches)?;
+        Ok(ret)
+    }
+
+    fn update_from_arg_matches(&mut self, matches: &clap::ArgMatches) -> Result<(), clap::Error> {
+        let Some(mut scores) = matches.get_many::<String>("scores") else {
+            return Err(clap::Error::raw(
+                clap::error::ErrorKind::MissingRequiredArgument,
+                "missing ...scores",
+            ));
+        };
+
+        while let Some(name) = scores.next() {
+            let Some(score) = scores.next() else {
+                return Err(clap::Error::raw(
+                    clap::error::ErrorKind::TooFewValues,
+                    "no matching score for name",
+                ));
+            };
+
+            let Ok(score) = score.parse() else {
+                return Err(clap::Error::raw(
+                    clap::error::ErrorKind::InvalidValue,
+                    "score must be a number",
+                ));
+            };
+
+            self.scores.push(ArbitraryScore { player: name.clone(), score })
+        }
+
+        Ok(())
+    }
+}
+
+impl Args for PlayScoreArgs {
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        cmd.arg(
+            Arg::new("scores")
+                .num_args(1..)
+                .required(true)
+                .allow_negative_numbers(true)
+        )
+    }
+
+    fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+        PlayScoreArgs::augment_args(cmd)
+    }
 }
 
 #[derive(Debug, Parser)]
@@ -552,6 +625,7 @@ fn main() {
     match args.command {
         Command::Play(p) => play(&args.file, p),
         Command::Arbitrary(p) => arbitrary(&args.file, p),
+        Command::Symmetric(p) => { dbg!(&p); },
         Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),
         Command::Ratings => ratings(&args.file),
