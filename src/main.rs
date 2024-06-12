@@ -107,7 +107,7 @@ struct Arbitrary {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Parser)]
 #[command(no_binary_name = true)]
-struct ArbitraryScore {
+struct Score {
     /// TODO
     player: String,
     /// TODO
@@ -140,7 +140,7 @@ struct Symmetric {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct PlayScoreArgs {
-    scores: Vec<ArbitraryScore>,
+    scores: Vec<Score>,
 }
 
 // TODO: get these close to official style
@@ -174,7 +174,7 @@ impl FromArgMatches for PlayScoreArgs {
                 ));
             };
 
-            self.scores.push(ArbitraryScore {
+            self.scores.push(Score {
                 player: name.clone(),
                 score,
             })
@@ -350,7 +350,7 @@ fn arbitrary(path: &Path, param: Arbitrary) {
             break;
         }
 
-        let param = ArbitraryScore::parse_from(splitty::split_unquoted_whitespace(input));
+        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
         let Some(player) = try_find_name(&data, &param.player) else {
             continue;
         };
