@@ -345,7 +345,7 @@ impl Evaluation {
 
                 let average_rating: f64 = rating_sum / symmetric.scores.len() as f64;
 
-                let _new_ratings: Vec<(&String, f64)> = symmetric
+                let new_ratings: Vec<(&String, f64)> = symmetric
                     .scores
                     .iter()
                     .map(|(player, score)| {
@@ -362,7 +362,9 @@ impl Evaluation {
                     })
                     .collect();
 
-                todo!()
+                for (player, new_rating) in new_ratings {
+                    *self.ratings.get_mut(player).unwrap() = new_rating;
+                }
             }
             Change::AdjustAlpha(new) => self.α = *new,
         }
