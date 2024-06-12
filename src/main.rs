@@ -44,6 +44,9 @@ enum Command {
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
     /// TODO
+    #[command(visible_alias = "c")]
+    Circular(Circular),
+    /// TODO
     #[command(visible_alias = "s")]
     Symmetric(Symmetric),
     /// Create or clear the file
@@ -124,6 +127,18 @@ struct ArbitraryGameCollection {
     player_2: String,
     /// TODO
     games: usize,
+}
+
+#[derive(Debug, Parser)]
+struct Circular {
+    /// TODO
+    game_count: usize,
+    /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
+    #[arg(short = 'd', long)]
+    date: Option<chrono::NaiveDate>,
+    /// TODO
+    #[command(flatten)]
+    scores: PlayScoreArgs,
 }
 
 #[derive(Debug, Parser)]
@@ -414,6 +429,12 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     ultira::write_data(path, &data).unwrap();
 }
 
+fn circular(path: &Path, _param: Circular) {
+    let mut _data = read_data(path);
+
+    todo!()
+}
+
 fn symmetric(path: &Path, param: Symmetric) {
     let mut data = read_data(path);
 
@@ -662,6 +683,7 @@ fn main() {
     match args.command {
         Command::Play(p) => play(&args.file, p),
         Command::Arbitrary(p) => arbitrary(&args.file, p),
+        Command::Circular(p) => circular(&args.file, p),
         Command::Symmetric(p) => symmetric(&args.file, p),
         Command::New(p) => new(&args.file, p),
         Command::AddPlayer(p) => add_player(&args.file, p),

@@ -122,6 +122,10 @@ impl Data {
         self.history.push(Change::Arbitrary(arbitrary));
     }
 
+    pub fn circular(&mut self, circular: Circular) {
+        self.history.push(Change::Circular(circular));
+    }
+
     pub fn symmetric(&mut self, symmetric: Symmetric) {
         self.history.push(Change::Symmetric(symmetric));
     }
