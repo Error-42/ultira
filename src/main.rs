@@ -43,7 +43,7 @@ enum Command {
     /// TODO
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
-    /// TODO,
+    /// TODO
     #[command(visible_alias = "s")]
     Symmetric(Symmetric),
     /// Create or clear the file
