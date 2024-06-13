@@ -108,6 +108,7 @@ struct Arbitrary {
     date: Option<chrono::NaiveDate>,
 }
 
+// Hang on... this is basically ultira::Outcome! TODO: maybe refactor so that these two aren't different?
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Parser)]
 #[command(no_binary_name = true)]
 struct Score {
