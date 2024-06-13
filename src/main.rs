@@ -430,10 +430,39 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn circular(path: &Path, _param: Circular) {
-    let mut _data = read_data(path);
+fn circular(path: &Path, param: Circular) {
+    let mut data = read_data(path);
 
-    todo!()
+    let Some(outcomes): Option<Vec<ultira::Outcome>> = param
+        .scores
+        .scores
+        .into_iter()
+        .map(|score| Some(ultira::Outcome { player: try_find_name(&data, &score.player)?, score: score.score }))
+        .collect() else {
+        return;
+    };
+
+    let eval_before = data.evaluate();
+
+    data.circular(ultira::Circular {
+        date: param
+            .date
+            .unwrap_or_else(|| chrono::Local::now().date_naive()),
+        game_count: param.game_count,
+        outcomes: outcomes.clone(),
+    });
+
+    let eval_after = data.evaluate();
+
+    for ultira::Outcome { player, score: _score } in outcomes {
+        print_rating_change(
+            &player,
+            data.config.rating_to_display(eval_before.ratings[&player]),
+            data.config.rating_to_display(eval_after.ratings[&player]),
+        )
+    }
+
+    ultira::write_data(path, &data).unwrap();
 }
 
 fn symmetric(path: &Path, param: Symmetric) {
