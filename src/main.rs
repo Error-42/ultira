@@ -2,7 +2,9 @@
 
 use std::{
     collections::HashMap,
-    fs, io, iter,
+    fs,
+    hash::Hash,
+    io, iter,
     path::{Path, PathBuf},
     process,
 };
@@ -106,6 +108,9 @@ struct Arbitrary {
     /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
+    /// TODO
+    #[arg(short = 's', long, action)]
+    sparse: bool,
 }
 
 // Hang on... this is basically ultira::Outcome! TODO: maybe refactor so that these two aren't different?
@@ -352,7 +357,10 @@ fn play(path: &Path, play: Play) {
 fn arbitrary(path: &Path, param: Arbitrary) {
     let mut data = read_data(path);
 
-    let (scores, game_collections) = sparse_arbitrary(&data);
+    let (scores, game_collections) = match param.sparse {
+        false => dense_arbitrary(&data),
+        true => sparse_arbitrary(&data),
+    };
 
     let arbitrary = ultira::Arbitrary {
         date: param
@@ -378,6 +386,59 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     }
 
     ultira::write_data(path, &data).unwrap();
+}
+
+fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::GameCollection>) {
+    // TODO: better prompts
+    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
+
+    let mut scores: HashMap<String, i64> = HashMap::new();
+    let mut players: Vec<String> = Vec::new();
+
+    // TODO: error if a player appears twice
+    // TODO: error if there are less than three players
+    loop {
+        // Ugh, this code is duplicated, but I'm too lazy now; so: TODO!
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
+        let Some(player) = try_find_name(data, &param.player) else {
+            continue;
+        };
+
+        *scores.entry(player.clone()).or_insert(0) += param.score;
+        players.push(player);
+    }
+
+    let mut game_collections = Vec::new();
+
+    println!("Please input the number of games as a matrix. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j.");
+    // TODO: validate input
+
+    for i in 0..players.len() {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let values: Vec<usize> = input
+            .trim()
+            .split(' ')
+            .map(|s| s.parse().unwrap())
+            .collect();
+
+        for j in (i + 1)..players.len() {
+            game_collections.push(ultira::GameCollection {
+                players: [players[i].clone(), players[j].clone()],
+                game_count: values[j],
+            });
+        }
+    }
+
+    (scores, game_collections)
 }
 
 fn sparse_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::GameCollection>) {
