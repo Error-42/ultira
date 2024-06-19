@@ -352,57 +352,7 @@ fn play(path: &Path, play: Play) {
 fn arbitrary(path: &Path, param: Arbitrary) {
     let mut data = read_data(path);
 
-    // TODO: better prompts
-    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
-
-    let mut scores: HashMap<String, i64> = HashMap::new();
-
-    loop {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-
-        if input.is_empty() {
-            break;
-        }
-
-        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
-        let Some(player) = try_find_name(&data, &param.player) else {
-            continue;
-        };
-
-        *scores.entry(player).or_insert(0) += param.score;
-    }
-
-    println!("Input the number of games between players! One per line: <player_1> <player_2> <games>. Write an empty line when complete.");
-
-    let mut game_collections = Vec::new();
-
-    loop {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-
-        if input.is_empty() {
-            break;
-        }
-
-        let param = ArbitraryGameCollection::parse_from(splitty::split_unquoted_whitespace(input));
-        let players = [param.player_1, param.player_2];
-        let players: Option<[String; 2]> = players
-            .map(|player| try_find_name(&data, &player))
-            .into_iter()
-            .collect::<Option<Vec<_>>>()
-            .and_then(|v| v.try_into().ok());
-        let Some(players) = players else {
-            continue;
-        };
-
-        game_collections.push(ultira::GameCollection {
-            players,
-            game_count: param.games,
-        });
-    }
+    let (scores, game_collections) = sparse_arbitrary(&data);
 
     let arbitrary = ultira::Arbitrary {
         date: param
@@ -428,6 +378,61 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     }
 
     ultira::write_data(path, &data).unwrap();
+}
+
+fn sparse_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::GameCollection>) {
+    // TODO: better prompts
+    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
+
+    let mut scores: HashMap<String, i64> = HashMap::new();
+
+    loop {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
+        let Some(player) = try_find_name(data, &param.player) else {
+            continue;
+        };
+
+        *scores.entry(player).or_insert(0) += param.score;
+    }
+
+    println!("Input the number of games between players! One per line: <player_1> <player_2> <games>. Write an empty line when complete.");
+
+    let mut game_collections = Vec::new();
+
+    loop {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = ArbitraryGameCollection::parse_from(splitty::split_unquoted_whitespace(input));
+        let players = [param.player_1, param.player_2];
+        let players: Option<[String; 2]> = players
+            .map(|player| try_find_name(data, &player))
+            .into_iter()
+            .collect::<Option<Vec<_>>>()
+            .and_then(|v| v.try_into().ok());
+        let Some(players) = players else {
+            continue;
+        };
+
+        game_collections.push(ultira::GameCollection {
+            players,
+            game_count: param.games,
+        });
+    }
+    (scores, game_collections)
 }
 
 fn circular(path: &Path, param: Circular) {
