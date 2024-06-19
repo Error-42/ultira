@@ -442,8 +442,14 @@ fn circular(path: &Path, param: Circular) {
         .scores
         .scores
         .into_iter()
-        .map(|score| Some(ultira::Outcome { player: try_find_name(&data, &score.player)?, score: score.score }))
-        .collect() else {
+        .map(|score| {
+            Some(ultira::Outcome {
+                player: try_find_name(&data, &score.player)?,
+                score: score.score,
+            })
+        })
+        .collect()
+    else {
         return;
     };
 
@@ -459,7 +465,11 @@ fn circular(path: &Path, param: Circular) {
 
     let eval_after = data.evaluate();
 
-    for ultira::Outcome { player, score: _score } in outcomes {
+    for ultira::Outcome {
+        player,
+        score: _score,
+    } in outcomes
+    {
         print_rating_change(
             &player,
             data.config.rating_to_display(eval_before.ratings[&player]),
