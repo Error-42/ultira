@@ -1,3 +1,5 @@
+// TODO: add all todos required for the git-integration preparation
+
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
@@ -37,7 +39,7 @@ enum Command {
     ///
     /// A play in defined as a consecutive series of games by the same three people on the same day uninterrupted. We consider a play interrupted iff at least one of the three members plays a rated game with someone other than the other two people.
     ///
-    /// Plays are ordered, this will make this play the newest one, no matter the date.
+    /// Plays are ordered, this will make this play the newest one, no matter the date. TODO: maybe attempt to insert based on the date as a preparation for git-integration?
     ///
     /// Each play has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
     #[command(visible_alias = "p")]
