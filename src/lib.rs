@@ -232,7 +232,7 @@ fn match_names(matched: &str, pattern: &str) -> bool {
         loop {
             match split_name.next() {
                 Some(word) if word.starts_with(pattern_word) => break,
-                Some(_word) => {},
+                Some(_word) => {}
                 None => return false,
             }
         }
