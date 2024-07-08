@@ -77,7 +77,9 @@ enum Command {
     /// Renames a player to a new name, also allows merging players
     #[command(visible_alias = "rename")]
     RenamePlayer(RenamePlayer),
-    /// TODO
+    /// Export the history of ratings into a .tsv file. This can then be graphed with a spreadsheet editor.
+    /// 
+    /// The first row contains the <basis> then names of the players. The first column contains the <basis> header then the <basis> values. The other cells contain the rating of the player at the time if it exists or an empty string otherwise.
     ExportRatings(ExportRatings),
 }
 
