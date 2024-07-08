@@ -84,6 +84,10 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3])
     new_ratings
 }
 
+pub trait Renamable {
+    fn rename(&mut self, old_name: &str, new_name: &str);
+}
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Data {
     pub config: Config,
@@ -137,8 +141,10 @@ impl Data {
     pub fn adjust_score_multiplier(&mut self, new: f64) {
         self.adjust_α(self.config.α_from_display(new));
     }
+}
 
-    pub fn rename(&mut self, old_name: &str, new_name: &str) {
+impl Renamable for Data {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
         for elem in &mut self.history {
             match elem {
                 Change::AddPlayer(p) => {
@@ -261,7 +267,7 @@ pub struct Outcome {
     pub score: i64,
 }
 
-impl Outcome {
+impl Renamable for Outcome {
     fn rename(&mut self, old_name: &str, new_name: &str) {
         if self.player == old_name {
             self.player = new_name.to_owned();
