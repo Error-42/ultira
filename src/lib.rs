@@ -163,7 +163,7 @@ impl Renamable for Data {
                     for outcome in &mut p.outcomes {
                         outcome.rename(old_name, new_name);
                     }
-                },
+                }
                 Change::Symmetric(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }

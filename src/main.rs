@@ -13,6 +13,8 @@ use std::{
 
 use clap::{Arg, Args, FromArgMatches, Parser, Subcommand, ValueEnum};
 
+use ultira::Renamable;
+
 /// Ulti rating calculator
 ///
 /// Player naming:
@@ -78,7 +80,7 @@ enum Command {
     #[command(visible_alias = "rename")]
     RenamePlayer(RenamePlayer),
     /// Export the history of ratings into a .tsv file. This can then be graphed with a spreadsheet editor.
-    /// 
+    ///
     /// The first row contains the <basis> then names of the players. The first column contains the <basis> header then the <basis> values. The other cells contain the rating of the player at the time if it exists or an empty string otherwise.
     ExportRatings(ExportRatings),
 }
@@ -281,7 +283,7 @@ struct Undo {
 struct ExportRatings {
     file: PathBuf,
     /// Sets the name of the top left cell.
-    /// 
+    ///
     /// TODO: this should be <basis> by default, not datum.
     #[arg(default_value = "datum")]
     datum_name: String,
