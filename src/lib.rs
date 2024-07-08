@@ -84,6 +84,7 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3])
     new_ratings
 }
 
+// TODO: Everything data object should implement this, maybe use something like ambassador to derive them where it's simply doable?
 pub trait Renamable {
     fn rename(&mut self, old_name: &str, new_name: &str);
 }
