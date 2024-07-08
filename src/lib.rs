@@ -148,13 +148,15 @@ impl Data {
                 }
                 Change::Play(p) => {
                     for outcome in &mut p.outcomes {
-                        if outcome.player == old_name {
-                            outcome.player = new_name.to_owned();
-                        }
+                        outcome.rename(old_name, new_name);
                     }
                 }
                 Change::Arbitrary(_) => todo!(),
-                Change::Circular(_) => todo!(),
+                Change::Circular(p) => {
+                    for outcome in &mut p.outcomes {
+                        outcome.rename(old_name, new_name);
+                    }
+                },
                 Change::Symmetric(_) => todo!(),
                 Change::AdjustAlpha(_) => {}
             }
@@ -257,6 +259,14 @@ impl Play {
 pub struct Outcome {
     pub player: String,
     pub score: i64,
+}
+
+impl Outcome {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        if self.player == old_name {
+            self.player = new_name.to_owned();
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
