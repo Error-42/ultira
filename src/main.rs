@@ -768,15 +768,15 @@ fn export_ratings(path: &Path, export: ExportRatings) {
             for change in data.history {
                 evaluation.change(&change);
 
-                if let ultira::Change::Play(play) = change {
-                    add_row_by_evaluation(&mut rows, play.date.to_string(), &mut evaluation);
+                if let ultira::Change::Session(session) = change {
+                    add_row_by_evaluation(&mut rows, session.date().to_string(), &mut evaluation);
                 }
             }
         }
         ExportRatingsBasis::Game => {
             for change in data.history {
                 match change {
-                    ultira::Change::Play(_play) => {
+                    ultira::Change::Session(_session) => {
                         todo!()
                     }
                     _ => evaluation.change(&change),

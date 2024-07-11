@@ -179,19 +179,19 @@ impl Data {
     }
 
     pub fn play(&mut self, play: Play) {
-        self.history.push(Change::Play(play));
+        self.history.push(Change::Session(Session::Play(play)));
     }
 
     pub fn arbitrary(&mut self, arbitrary: Arbitrary) {
-        self.history.push(Change::Arbitrary(arbitrary));
+        self.history.push(Change::Session(Session::Arbitrary(arbitrary)));
     }
 
     pub fn circular(&mut self, circular: Circular) {
-        self.history.push(Change::Circular(circular));
+        self.history.push(Change::Session(Session::Circular(circular)));
     }
 
     pub fn symmetric(&mut self, symmetric: Symmetric) {
-        self.history.push(Change::Symmetric(symmetric));
+        self.history.push(Change::Session(Session::Symmetric(symmetric)));
     }
 
     pub fn adjust_α(&mut self, new: f64) {
@@ -248,22 +248,16 @@ impl Config {
 #[serde(rename_all = "snake_case")]
 pub enum Change {
     AddPlayer(AddPlayer),
-    // TODO: remove?
-    Play(Play),
-    Arbitrary(Arbitrary),
-    Circular(Circular),
-    Symmetric(Symmetric),
     AdjustAlpha(f64),
+    #[serde(untagged)]
+    Session(Session),
 }
 
 impl Change {
     pub fn date(&self) -> Option<&chrono::NaiveDate> {
         match self {
             Change::AddPlayer(_) => None,
-            Change::Play(play) => Some(&play.date),
-            Change::Arbitrary(arbitrary) => Some(&arbitrary.date),
-            Change::Circular(circular) => Some(&circular.date),
-            Change::Symmetric(symmetric) => Some(&symmetric.date),
+            Change::Session(session) => Some(session.date()),
             Change::AdjustAlpha(_) => None,
         }
     }
@@ -273,10 +267,7 @@ impl Renamable for Change {
     fn rename(&mut self, old_name: &str, new_name: &str) {
         match self {
             Change::AddPlayer(v) => v.rename(old_name, new_name),
-            Change::Play(v) => v.rename(old_name, new_name),
-            Change::Arbitrary(v) => v.rename(old_name, new_name),
-            Change::Circular(v) => v.rename(old_name, new_name),
-            Change::Symmetric(v) => v.rename(old_name, new_name),
+            Change::Session(v) => v.rename(old_name, new_name),
             Change::AdjustAlpha(_) => {}
         }
     }
@@ -291,6 +282,38 @@ pub struct AddPlayer {
 impl Renamable for AddPlayer {
     fn rename(&mut self, old_name: &str, new_name: &str) {
         self.name.rename(old_name, new_name);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Session {
+    // TODO: remove?
+    Play(Play),
+    Arbitrary(Arbitrary),
+    Circular(Circular),
+    Symmetric(Symmetric),
+}
+
+impl Session {
+    pub fn date(&self) -> &chrono::NaiveDate {
+        match self {
+            Session::Play(play) => &play.date,
+            Session::Arbitrary(arbitrary) => &arbitrary.date,
+            Session::Circular(circular) => &circular.date,
+            Session::Symmetric(symmetric) => &symmetric.date,
+        }
+    }
+}
+
+impl Renamable for Session {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        match self {
+            Session::Play(v) => v.rename(old_name, new_name),
+            Session::Arbitrary(v) => v.rename(old_name, new_name),
+            Session::Circular(v) => v.rename(old_name, new_name),
+            Session::Symmetric(v) => v.rename(old_name, new_name),
+        }
     }
 }
 
@@ -428,7 +451,17 @@ impl Evaluation {
             Change::AddPlayer(addition) => {
                 self.ratings.insert(addition.name.clone(), addition.rating);
             }
-            Change::Play(play) => {
+            Change::Session(session) => self.apply_session(session),
+            Change::AdjustAlpha(new) => self.α = *new,
+        }
+
+        // `Some(x) > None`, so this code will handle `None`s correctly.
+        self.last_date = self.last_date.max(change.date().copied());
+    }
+
+    pub fn apply_session(&mut self, session: &Session) {
+        match session {
+            Session::Play(play) => {
                 let selected_ratings: [f64; 3] = play
                     .outcomes
                     .clone()
@@ -445,9 +478,9 @@ impl Evaluation {
                     *self.ratings.get_mut(&play.outcomes[i].player).unwrap() = new_ratings[i];
                 }
             }
-            Change::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
-            Change::Circular(circular) => self.apply_circular_outcomes(circular),
-            Change::Symmetric(symmetric) => {
+            Session::Arbitrary(arbitrary) => self.apply_arbtrarity_outcomes(arbitrary),
+            Session::Circular(circular) => self.apply_circular_outcomes(circular),
+            Session::Symmetric(symmetric) => {
                 assert!(symmetric.scores.len() >= 3);
 
                 let rating_sum: f64 = symmetric
@@ -479,11 +512,7 @@ impl Evaluation {
                     *self.ratings.get_mut(player).unwrap() = new_rating;
                 }
             }
-            Change::AdjustAlpha(new) => self.α = *new,
         }
-
-        // `Some(x) > None`, so this code will handle `None`s correctly.
-        self.last_date = self.last_date.max(change.date().copied());
     }
 
     pub fn apply_arbtrarity_outcomes(&mut self, outcomes: &Arbitrary) {
