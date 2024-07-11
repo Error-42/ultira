@@ -283,8 +283,8 @@ struct Undo {
 struct ExportRatings {
     file: PathBuf,
     /// Sets the name of the top left cell.
-    #[arg(default_value = "datum")]
-    datum_name: String,
+    #[arg(default_value = "date")]
+    date_name: String,
     /// Use a decimal comma instead of decimal point
     #[arg(short = 'c', long, action)]
     decimal_comma: bool,
@@ -711,7 +711,7 @@ fn export_ratings(path: &Path, export: ExportRatings) {
 
     // header
     rows.push(
-        iter::once(export.datum_name)
+        iter::once(export.date_name)
             .chain(names.iter().cloned())
             .collect(),
     );
