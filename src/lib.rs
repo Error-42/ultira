@@ -87,6 +87,65 @@ pub fn rating_change(α: f64, games: usize, ratings: [f64; 3], scores: [i64; 3])
 // TODO: Everything data object should implement this, maybe use something like ambassador to derive them where it's simply doable?
 pub trait Renamable {
     fn rename(&mut self, old_name: &str, new_name: &str);
+
+    fn renamed(mut self, old_name: &str, new_name: &str) -> Self
+    where
+        Self: Sized,
+    {
+        self.rename(old_name, new_name);
+
+        self
+    }
+}
+
+impl Renamable for String {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        if self == old_name {
+            *self = new_name.to_owned();
+        }
+    }
+}
+
+// This implement renamable for scores. Maybe a newtype should be used instead?
+impl Renamable for HashMap<String, i64> {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        // Must clone, since we can't temporarily move out of `&mut self`.
+        *self = self
+            .clone()
+            .into_iter()
+            .map(|(name, score)| (name.renamed(old_name, new_name), score))
+            .collect();
+    }
+}
+
+// An implementation for a generic container was attempted, however the implementation conflicts with the implementation of `std::string::String` for reason I was too lazy to understand.
+//
+// ```
+// impl<Iterable, R> Renamable for Iterable
+// where
+//     for<'a> &'a mut Iterable: IntoIterator<Item = &'a mut R>,
+//     R: Renamable,
+// {
+//     fn rename(&mut self, old_name: &str, new_name: &str)
+//     {
+//         unimplemented!()
+//     }
+// }
+// ```
+impl<T: Renamable> Renamable for Vec<T> {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        for elem in self {
+            elem.rename(old_name, new_name);
+        }
+    }
+}
+
+impl<T: Renamable, const N: usize> Renamable for [T; N] {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        for elem in self {
+            elem.rename(old_name, new_name);
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -146,28 +205,7 @@ impl Data {
 
 impl Renamable for Data {
     fn rename(&mut self, old_name: &str, new_name: &str) {
-        for elem in &mut self.history {
-            match elem {
-                Change::AddPlayer(p) => {
-                    if p.name == old_name {
-                        p.name = new_name.to_owned();
-                    }
-                }
-                Change::Play(p) => {
-                    for outcome in &mut p.outcomes {
-                        outcome.rename(old_name, new_name);
-                    }
-                }
-                Change::Arbitrary(_) => todo!(),
-                Change::Circular(p) => {
-                    for outcome in &mut p.outcomes {
-                        outcome.rename(old_name, new_name);
-                    }
-                }
-                Change::Symmetric(_) => todo!(),
-                Change::AdjustAlpha(_) => {}
-            }
-        }
+        self.history.rename(old_name, new_name);
     }
 }
 
@@ -231,10 +269,29 @@ impl Change {
     }
 }
 
+impl Renamable for Change {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        match self {
+            Change::AddPlayer(v) => v.rename(old_name, new_name),
+            Change::Play(v) => v.rename(old_name, new_name),
+            Change::Arbitrary(v) => v.rename(old_name, new_name),
+            Change::Circular(v) => v.rename(old_name, new_name),
+            Change::Symmetric(v) => v.rename(old_name, new_name),
+            Change::AdjustAlpha(_) => {}
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct AddPlayer {
     pub name: String,
     pub rating: f64,
+}
+
+impl Renamable for AddPlayer {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        self.name.rename(old_name, new_name);
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Deserialize, Serialize)]
@@ -262,6 +319,14 @@ impl Play {
     }
 }
 
+impl Renamable for Play {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        for outcome in &mut self.outcomes {
+            outcome.rename(old_name, new_name);
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct Outcome {
     pub player: String,
@@ -284,10 +349,23 @@ pub struct Arbitrary {
     pub game_collections: Vec<GameCollection>,
 }
 
+impl Renamable for Arbitrary {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        self.scores.rename(old_name, new_name);
+        (&mut self.game_collections).rename(old_name, new_name);
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
 pub struct GameCollection {
     pub players: [String; 2],
     pub game_count: usize,
+}
+
+impl Renamable for GameCollection {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        self.players.rename(old_name, new_name);
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
@@ -298,12 +376,24 @@ pub struct Circular {
     pub game_count: usize,
 }
 
+impl Renamable for Circular {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        self.outcomes.rename(old_name, new_name);
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
 /// Must contain at leats 1 player, but probably should contain at least 3. TODO: check this?
 pub struct Symmetric {
     pub date: chrono::NaiveDate,
     pub scores: HashMap<String, i64>,
     pub round_count: usize,
+}
+
+impl Renamable for Symmetric {
+    fn rename(&mut self, old_name: &str, new_name: &str) {
+        self.scores.rename(old_name, new_name);
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
