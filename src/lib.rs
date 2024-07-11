@@ -304,6 +304,15 @@ impl Session {
             Session::Symmetric(symmetric) => &symmetric.date,
         }
     }
+
+    pub fn game_count(&self) -> usize {
+        match self {
+            Session::Play(play) => play.game_count,
+            Session::Arbitrary(arbitrary) => arbitrary.game_count(),
+            Session::Circular(circular) => circular.game_count(),
+            Session::Symmetric(symmetric) => symmetric.game_count(),
+        }
+    }
 }
 
 impl Renamable for Session {
@@ -372,6 +381,15 @@ pub struct Arbitrary {
     pub game_collections: Vec<GameCollection>,
 }
 
+impl Arbitrary {
+    pub fn game_count(&self) -> usize {
+        self.game_collections
+            .iter()
+            .map(|game_collection| game_collection.game_count)
+            .sum()
+    }
+}
+
 impl Renamable for Arbitrary {
     fn rename(&mut self, old_name: &str, new_name: &str) {
         self.scores.rename(old_name, new_name);
@@ -396,7 +414,13 @@ pub struct Circular {
     pub date: chrono::NaiveDate,
     // See play.date for why this type is used.
     pub outcomes: Vec<Outcome>,
-    pub game_count: usize,
+    pub round_count: usize,
+}
+
+impl Circular {
+    pub fn game_count(&self) -> usize {
+        self.outcomes.len() * self.round_count
+    }
 }
 
 impl Renamable for Circular {
@@ -411,6 +435,13 @@ pub struct Symmetric {
     pub date: chrono::NaiveDate,
     pub scores: HashMap<String, i64>,
     pub round_count: usize,
+}
+
+impl Symmetric {
+    pub fn game_count(&self) -> usize {
+        // (number_of_players choose 3) * round_count
+        self.scores.len() * (self.scores.len() - 1) * (self.scores.len() - 2) / 6 * self.round_count
+    }
 }
 
 impl Renamable for Symmetric {
@@ -574,7 +605,7 @@ impl Evaluation {
             let mut matrix = DMatrix::zeros(circular.outcomes.len(), circular.outcomes.len());
 
             // This is very inefficient, but I'm too lazy to code this properly until it becomes a problem.
-            for i in 0..circular.game_count {
+            for i in 0..circular.round_count {
                 for d0 in 0..3 {
                     let j0 = (i + d0) % circular.outcomes.len();
 

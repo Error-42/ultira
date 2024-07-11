@@ -528,7 +528,7 @@ fn circular(path: &Path, param: Circular) {
         date: param
             .date
             .unwrap_or_else(|| chrono::Local::now().date_naive()),
-        game_count: param.game_count,
+        round_count: param.game_count,
         outcomes: outcomes.clone(),
     });
 
@@ -776,8 +776,19 @@ fn export_ratings(path: &Path, export: ExportRatings) {
         ExportRatingsBasis::Game => {
             for change in data.history {
                 match change {
-                    ultira::Change::Session(_session) => {
-                        todo!()
+                    ultira::Change::Session(session) => {
+                        let game_count = session.game_count();
+                        let original_α = evaluation.α;
+
+                        // We reduce the α by a factor of game_count. This has the same effect as applying one games worth of rating changes. We can then simply apply the session game_count times. At the end we reset the α as if nothing happened. 
+                        evaluation.α = original_α / game_count as f64;
+
+                        for _ in 0..game_count {
+                            evaluation.apply_session(&session);
+                            add_row_by_evaluation(&mut rows, session.date().to_string(), &mut evaluation);
+                        }
+
+                        evaluation.α = original_α;
                     }
                     _ => evaluation.change(&change),
                 }
