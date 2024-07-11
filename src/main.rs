@@ -283,8 +283,6 @@ struct Undo {
 struct ExportRatings {
     file: PathBuf,
     /// Sets the name of the top left cell.
-    ///
-    /// TODO: this should be <basis> by default, not datum.
     #[arg(default_value = "datum")]
     datum_name: String,
     /// Use a decimal comma instead of decimal point
