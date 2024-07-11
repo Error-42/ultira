@@ -632,7 +632,18 @@ impl Evaluation {
     }
 }
 
-fn match_names(matched: &str, pattern: &str) -> bool {
+/// See documentation of `Cli` (aka. binary documentation) for details.
+/// 
+/// ```
+/// use ultira::match_names;
+/// 
+/// assert!(match_names("Németh Marcell", "Németh M"));
+/// assert!(match_names("Németh Márton", "Németh M"));
+/// assert!(!match_names("Németh Dominik", "Németh M"));
+/// assert!(match_names("Németh Marcell", "Ma"));
+/// assert!(!match_names("Németh Márton", "Ma"));
+/// ```
+pub fn match_names(matched: &str, pattern: &str) -> bool {
     let mut split_name = matched.split(' ').filter(|x| !x.is_empty());
     let split_pattern = pattern.split(' ').filter(|x| !x.is_empty());
 
@@ -647,18 +658,4 @@ fn match_names(matched: &str, pattern: &str) -> bool {
     }
 
     true
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn name_matching() {
-        assert!(match_names("Németh Marcell", "Németh M"));
-        assert!(match_names("Németh Márton", "Németh M"));
-        assert!(!match_names("Németh Dominik", "Németh M"));
-        assert!(match_names("Németh Marcell", "Ma"));
-        assert!(!match_names("Németh Márton", "Ma"));
-    }
 }
