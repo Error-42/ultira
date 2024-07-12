@@ -25,6 +25,10 @@ use ultira::Renamable;
 /// 2. Otherwist a pattern matches the name iff there exists such a subsequence of the words of the name, the words of the pattern are prefixes of the corresponding words of the subsequence.
 ///
 /// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell" and therefore will give an error. "Dani" will match "Dániel".
+/// 
+/// Change ordering:
+/// 
+/// Considering any change pushed to history that has a date associated with it, the program will attempt to insert the change based on the date.
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
@@ -41,7 +45,7 @@ enum Command {
     ///
     /// A play in defined as a consecutive series of games by the same three people on the same day uninterrupted. We consider a play interrupted iff at least one of the three members plays a rated game with someone other than the other two people.
     ///
-    /// Plays are ordered, this will make this play the newest one, no matter the date. TODO: maybe attempt to insert based on the date as a preparation for git-integration?
+    /// Plays are ordered, this will attempt to insert the play based on the date.
     ///
     /// Each play has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
     #[command(visible_alias = "p")]
@@ -778,12 +782,16 @@ fn export_ratings(path: &Path, export: ExportRatings) {
                         let game_count = session.game_count();
                         let original_α = evaluation.α;
 
-                        // We reduce the α by a factor of game_count. This has the same effect as applying one games worth of rating changes. We can then simply apply the session game_count times. At the end we reset the α as if nothing happened. 
+                        // We reduce the α by a factor of game_count. This has the same effect as applying one games worth of rating changes. We can then simply apply the session game_count times. At the end we reset the α as if nothing happened.
                         evaluation.α = original_α / game_count as f64;
 
                         for _ in 0..game_count {
                             evaluation.apply_session(&session);
-                            add_row_by_evaluation(&mut rows, session.date().to_string(), &mut evaluation);
+                            add_row_by_evaluation(
+                                &mut rows,
+                                session.date().to_string(),
+                                &mut evaluation,
+                            );
                         }
 
                         evaluation.α = original_α;

@@ -169,8 +169,7 @@ impl Data {
     }
 
     pub fn add_player(&mut self, name: String, rating: f64) {
-        self.history
-            .push(Change::AddPlayer(AddPlayer { name, rating }));
+        self.insert_change(Change::AddPlayer(AddPlayer { name, rating }));
     }
 
     pub fn add_player_display(&mut self, name: String, display: f64) {
@@ -178,27 +177,50 @@ impl Data {
     }
 
     pub fn play(&mut self, play: Play) {
-        self.history.push(Change::Session(Session::Play(play)));
+        self.insert_change(Change::Session(Session::Play(play)));
     }
 
     pub fn arbitrary(&mut self, arbitrary: Arbitrary) {
-        self.history.push(Change::Session(Session::Arbitrary(arbitrary)));
+        self.insert_change(Change::Session(Session::Arbitrary(arbitrary)));
     }
 
     pub fn circular(&mut self, circular: Circular) {
-        self.history.push(Change::Session(Session::Circular(circular)));
+        self.insert_change(Change::Session(Session::Circular(circular)));
     }
 
     pub fn symmetric(&mut self, symmetric: Symmetric) {
-        self.history.push(Change::Session(Session::Symmetric(symmetric)));
+        self.insert_change(Change::Session(Session::Symmetric(symmetric)));
     }
 
     pub fn adjust_α(&mut self, new: f64) {
-        self.history.push(Change::AdjustAlpha(new));
+        self.insert_change(Change::AdjustAlpha(new));
     }
 
     pub fn adjust_score_multiplier(&mut self, new: f64) {
         self.adjust_α(self.config.α_from_display(new));
+    }
+
+    pub fn insert_change(&mut self, change: Change) {
+        let Some(pushed_date) = change.date() else {
+            self.history.push(change);
+            return;
+        };
+
+        let mut insertion_point = self.history.len();
+
+        while insertion_point > 0 {
+            let Some(history_date) = self.history[insertion_point - 1].date() else {
+                break;
+            };
+
+            if pushed_date >= history_date {
+                break;
+            }
+
+            insertion_point -= 1;
+        }
+
+        self.history.insert(insertion_point, change);
     }
 }
 
@@ -633,10 +655,10 @@ impl Evaluation {
 }
 
 /// See documentation of `Cli` (aka. binary documentation) for details.
-/// 
+///
 /// ```
 /// use ultira::match_names;
-/// 
+///
 /// assert!(match_names("Németh Marcell", "Németh M"));
 /// assert!(match_names("Németh Márton", "Németh M"));
 /// assert!(!match_names("Németh Dominik", "Németh M"));
