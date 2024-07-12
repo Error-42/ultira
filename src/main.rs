@@ -25,9 +25,9 @@ use ultira::Renamable;
 /// 2. Otherwist a pattern matches the name iff there exists such a subsequence of the words of the name, the words of the pattern are prefixes of the corresponding words of the subsequence.
 ///
 /// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell" and therefore will give an error. "Dani" will match "Dániel".
-/// 
+///
 /// Change ordering:
-/// 
+///
 /// Considering any change pushed to history that has a date associated with it, the program will attempt to insert the change based on the date.
 #[derive(Debug, Parser)]
 #[clap(version)]
@@ -367,9 +367,11 @@ fn play(path: &Path, play: Play) {
 fn arbitrary(path: &Path, param: Arbitrary) {
     let mut data = read_data(path);
 
-    let (scores, game_collections) = match param.sparse {
+    let Some((scores, game_collections)) = (match param.sparse {
         false => dense_arbitrary(&data),
         true => sparse_arbitrary(&data),
+    }) else {
+        return;
     };
 
     let arbitrary = ultira::Arbitrary {
@@ -398,14 +400,15 @@ fn arbitrary(path: &Path, param: Arbitrary) {
     ultira::write_data(path, &data).unwrap();
 }
 
-fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::GameCollection>) {
+fn dense_arbitrary(
+    data: &ultira::Data,
+) -> Option<(HashMap<String, i64>, Vec<ultira::GameCollection>)> {
     // TODO: better prompts
     println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
 
     let mut scores: HashMap<String, i64> = HashMap::new();
     let mut players: Vec<String> = Vec::new();
 
-    // TODO: error if there are less than three players
     loop {
         // Ugh, this code is duplicated, but I'm too lazy now; so: TODO!
         let mut input = String::new();
@@ -430,6 +433,11 @@ fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::Ga
         players.push(player);
     }
 
+    if players.len() < 3 {
+        println!("Less than three players have been inputted, aborting...");
+        return None;
+    }
+
     let mut game_collections = Vec::new();
 
     println!("Please input the number of games as a matrix. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j.");
@@ -452,10 +460,12 @@ fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::Ga
         }
     }
 
-    (scores, game_collections)
+    Some((scores, game_collections))
 }
 
-fn sparse_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::GameCollection>) {
+fn sparse_arbitrary(
+    data: &ultira::Data,
+) -> Option<(HashMap<String, i64>, Vec<ultira::GameCollection>)> {
     // TODO: better prompts
     println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
 
@@ -507,7 +517,8 @@ fn sparse_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::G
             game_count: param.games,
         });
     }
-    (scores, game_collections)
+
+    Some((scores, game_collections))
 }
 
 fn circular(path: &Path, param: Circular) {
