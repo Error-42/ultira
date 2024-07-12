@@ -406,37 +406,7 @@ fn dense_arbitrary(
     // TODO: better prompts
     println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
 
-    let mut scores: HashMap<String, i64> = HashMap::new();
-    let mut players: Vec<String> = Vec::new();
-
-    loop {
-        // Ugh, this code is duplicated, but I'm too lazy now; so: TODO!
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-
-        if input.is_empty() {
-            break;
-        }
-
-        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
-        let Some(player) = try_find_name(data, &param.player) else {
-            continue;
-        };
-
-        if scores.contains_key(&player) {
-            println!("Player {player} already inputted, skipping new entry...");
-            continue;
-        }
-
-        *scores.entry(player.clone()).or_insert(0) += param.score;
-        players.push(player);
-    }
-
-    if players.len() < 3 {
-        println!("Less than three players have been inputted, aborting...");
-        return None;
-    }
+    let (scores, players) = player_scores(data, true)?;    
 
     let mut game_collections = Vec::new();
 
@@ -469,24 +439,7 @@ fn sparse_arbitrary(
     // TODO: better prompts
     println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
 
-    let mut scores: HashMap<String, i64> = HashMap::new();
-
-    loop {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-
-        if input.is_empty() {
-            break;
-        }
-
-        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
-        let Some(player) = try_find_name(data, &param.player) else {
-            continue;
-        };
-
-        *scores.entry(player).or_insert(0) += param.score;
-    }
+    let (scores, _) = player_scores(data, false)?;
 
     println!("Input the number of games between players! One per line: <player_1> <player_2> <games>. Write an empty line when complete.");
 
@@ -519,6 +472,51 @@ fn sparse_arbitrary(
     }
 
     Some((scores, game_collections))
+}
+
+fn player_scores(data: &ultira::Data, skip_if_duplicate: bool) -> Option<(HashMap<String, i64>, Vec<String>)> {
+    let mut scores: HashMap<String, i64> = HashMap::new();
+    let mut players: Vec<String> = Vec::new();
+
+    loop {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        if input.is_empty() {
+            break;
+        }
+
+        let param = Score::parse_from(splitty::split_unquoted_whitespace(input));
+        let Some(player) = try_find_name(data, &param.player) else {
+            continue;
+        };
+
+        if scores.contains_key(&player) {
+            if skip_if_duplicate {
+                println!("Player {player} already inputted, skipping new entry...");
+                continue;
+            } else {
+                println!("Player {player} already inputted, summing scores...");
+            }
+        } else {
+            players.push(player.clone());
+        }
+        
+        *scores.entry(player).or_insert(0) += param.score;
+    }
+
+    if players.len() < 3 {
+        println!("Less than three players have been inputted, aborting...");
+        return None;
+    }
+
+    if scores.values().sum::<i64>() != 0 {
+        println!("Sum of scores is {}, not 0; aborting...", scores.values().sum::<i64>());
+        return None;
+    }
+
+    Some((scores, players))
 }
 
 fn circular(path: &Path, param: Circular) {
