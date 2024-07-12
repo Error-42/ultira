@@ -405,7 +405,6 @@ fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::Ga
     let mut scores: HashMap<String, i64> = HashMap::new();
     let mut players: Vec<String> = Vec::new();
 
-    // TODO: error if a player appears twice
     // TODO: error if there are less than three players
     loop {
         // Ugh, this code is duplicated, but I'm too lazy now; so: TODO!
@@ -421,6 +420,11 @@ fn dense_arbitrary(data: &ultira::Data) -> (HashMap<String, i64>, Vec<ultira::Ga
         let Some(player) = try_find_name(data, &param.player) else {
             continue;
         };
+
+        if scores.contains_key(&player) {
+            println!("Player {player} already inputted, skipping new entry...");
+            continue;
+        }
 
         *scores.entry(player.clone()).or_insert(0) += param.score;
         players.push(player);
