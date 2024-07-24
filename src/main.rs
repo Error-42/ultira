@@ -26,9 +26,9 @@ use ultira::Renamable;
 ///
 /// Example: "Márton" will match "Németh Márton" but not "Németh Marcell". "Németh M" will match both "Németh Márton" and "Németh Marcell" and therefore will give an error. "Dani" will match "Dániel".
 ///
-/// Change ordering:
+/// Session ordering:
 ///
-/// Considering any change pushed to history that has a date associated with it, the program will attempt to insert the change based on the date.
+/// All sessions have a date associated with them, when not specified, this is the naive system local date. The program will attempt to insert the session into history based on the date. Monotonity is not guaranteed.
 #[derive(Debug, Parser)]
 #[clap(version)]
 struct Cli {
@@ -45,15 +45,15 @@ enum Command {
     ///
     /// A play in defined as a consecutive series of games by the same three people on the same day uninterrupted. We consider a play interrupted iff at least one of the three members plays a rated game with someone other than the other two people.
     ///
-    /// Plays are ordered, this will attempt to insert the play based on the date.
-    ///
-    /// Each play has a date associated with it. If not specified, the system's date will be used in the proleptic Gregorian calendar. Monotonity is not guaranteed.
+    /// See session ordering on the main help page for details on dates and ordering.
     #[command(visible_alias = "p")]
     Play(Play),
-    /// TODO
+    /// Evaluate rating changes after a session containing games with arbitrary players.
+    /// 
+    /// See session ordering on the main help page for details on dates and ordering.
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
-    /// TODO
+    /// Evaluate rating changes after a session where people sat in a circle and three adjecent players played [TODO]
     #[command(visible_alias = "c")]
     Circular(Circular),
     /// TODO
