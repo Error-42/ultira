@@ -53,10 +53,14 @@ enum Command {
     /// See session ordering on the main help page for details on dates and ordering.
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
-    /// Evaluate rating changes after a session where people sat in a circle and three adjecent players played [TODO]
+    /// Evaluate rating changes after a session where active players rotated.
+    /// 
+    /// The participants of the i-th game must be the players indexed i, i+1, and i+2 all taken modulo the number of players.
+    /// 
+    /// TODO: maybe allow for it to be the players to have indicies (i-1)*s+1 ... (i-1)*s+3 where s is a parameter.
     #[command(visible_alias = "c")]
     Circular(Circular),
-    /// TODO
+    /// Evaluate rating changes after a session where all triplets of players played an equal amount of games together.
     #[command(visible_alias = "s")]
     Symmetric(Symmetric),
     /// Create or clear the file
@@ -118,7 +122,7 @@ struct Arbitrary {
     /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
-    /// TODO
+    /// Input the number of times pair of players each player played as sparse matrix.
     #[arg(short = 's', long, action)]
     sparse: bool,
 }
@@ -147,24 +151,22 @@ struct ArbitraryGameCollection {
 
 #[derive(Debug, Parser)]
 struct Circular {
-    /// TODO
+    /// Number of games
     game_count: usize,
     /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
-    /// TODO
     #[command(flatten)]
     scores: PlayScoreArgs,
 }
 
 #[derive(Debug, Parser)]
 struct Symmetric {
-    /// TODO
+    /// The number of times each triplet of players played together.
     round_count: usize,
     /// Specify the date of the play, does not affect the order of the plays. Format: YYYY-MM-DD
     #[arg(short = 'd', long)]
     date: Option<chrono::NaiveDate>,
-    /// TODO
     #[command(flatten)]
     scores: PlayScoreArgs,
 }
@@ -218,10 +220,12 @@ impl FromArgMatches for PlayScoreArgs {
 impl Args for PlayScoreArgs {
     fn augment_args(cmd: clap::Command) -> clap::Command {
         cmd.arg(
-            Arg::new("scores")
+            Arg::new("PLAYER SCORE")
                 .num_args(1..)
                 .required(true)
-                .allow_negative_numbers(true),
+                .allow_negative_numbers(true)
+                .help("The names and scores of the players.")
+                .long_help("The names and scores of the players.\n\ne.g. `Márton 5 István -11 Dániel 6 Marc 0`"),
         )
     }
 
@@ -403,14 +407,11 @@ fn arbitrary(path: &Path, param: Arbitrary) {
 fn dense_arbitrary(
     data: &ultira::Data,
 ) -> Option<(HashMap<String, i64>, Vec<ultira::GameCollection>)> {
-    // TODO: better prompts
-    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
-
     let (scores, players) = player_scores(data, true)?;    
 
     let mut game_collections = Vec::new();
 
-    println!("Please input the number of games as a matrix. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j.");
+    println!("Using a matrix, for each pair of players input the number games they played together. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j. (When i=j, this should be the number of games the player indexed i played.");
     // TODO: validate input
 
     for i in 0..players.len() {
@@ -436,12 +437,9 @@ fn dense_arbitrary(
 fn sparse_arbitrary(
     data: &ultira::Data,
 ) -> Option<(HashMap<String, i64>, Vec<ultira::GameCollection>)> {
-    // TODO: better prompts
-    println!("Input the scores of players! One per line: <player> <score>. Write an empty line when complete.");
-
     let (scores, _) = player_scores(data, false)?;
 
-    println!("Input the number of games between players! One per line: <player_1> <player_2> <games>. Write an empty line when complete.");
+    println!("For each pair of distinct players who played at least one game together, input the number of times they played together; one per line: <PLAYER_1> <PLAYER_2> <GAMES>. Write an empty line when complete.");
 
     let mut game_collections = Vec::new();
 
@@ -475,6 +473,8 @@ fn sparse_arbitrary(
 }
 
 fn player_scores(data: &ultira::Data, skip_if_duplicate: bool) -> Option<(HashMap<String, i64>, Vec<String>)> {
+    println!("Input the names and scores of the players, one per line: <PLAYER> <SCORE>. Write an empty line when complete.");
+
     let mut scores: HashMap<String, i64> = HashMap::new();
     let mut players: Vec<String> = Vec::new();
 
