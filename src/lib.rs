@@ -414,7 +414,7 @@ impl Arbitrary {
 impl Renamable for Arbitrary {
     fn rename(&mut self, old_name: &str, new_name: &str) {
         self.scores.rename(old_name, new_name);
-        (&mut self.game_collections).rename(old_name, new_name);
+        self.game_collections.rename(old_name, new_name);
     }
 }
 
