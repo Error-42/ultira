@@ -49,14 +49,14 @@ enum Command {
     #[command(visible_alias = "p")]
     Play(Play),
     /// Evaluate rating changes after a session containing games with arbitrary players.
-    /// 
+    ///
     /// See session ordering on the main help page for details on dates and ordering.
     #[command(visible_alias = "a")]
     Arbitrary(Arbitrary),
     /// Evaluate rating changes after a session where active players rotated.
-    /// 
+    ///
     /// The participants of the i-th game must be the players indexed i, i+1, and i+2 all taken modulo the number of players.
-    /// 
+    ///
     /// TODO: maybe allow for it to be the players to have indicies (i-1)*s+1 ... (i-1)*s+3 where s is a parameter.
     #[command(visible_alias = "c")]
     Circular(Circular),
@@ -407,7 +407,7 @@ fn arbitrary(path: &Path, param: Arbitrary) {
 fn dense_arbitrary(
     data: &ultira::Data,
 ) -> Option<(HashMap<String, i64>, Vec<ultira::GameCollection>)> {
-    let (scores, players) = player_scores(data, true)?;    
+    let (scores, players) = player_scores(data, true)?;
 
     let mut game_collections = Vec::new();
 
@@ -472,7 +472,10 @@ fn sparse_arbitrary(
     Some((scores, game_collections))
 }
 
-fn player_scores(data: &ultira::Data, skip_if_duplicate: bool) -> Option<(HashMap<String, i64>, Vec<String>)> {
+fn player_scores(
+    data: &ultira::Data,
+    skip_if_duplicate: bool,
+) -> Option<(HashMap<String, i64>, Vec<String>)> {
     println!("Input the names and scores of the players, one per line: <PLAYER> <SCORE>. Write an empty line when complete.");
 
     let mut scores: HashMap<String, i64> = HashMap::new();
@@ -502,7 +505,7 @@ fn player_scores(data: &ultira::Data, skip_if_duplicate: bool) -> Option<(HashMa
         } else {
             players.push(player.clone());
         }
-        
+
         *scores.entry(player).or_insert(0) += param.score;
     }
 
@@ -512,7 +515,10 @@ fn player_scores(data: &ultira::Data, skip_if_duplicate: bool) -> Option<(HashMa
     }
 
     if scores.values().sum::<i64>() != 0 {
-        println!("Sum of scores is {}, not 0; aborting...", scores.values().sum::<i64>());
+        println!(
+            "Sum of scores is {}, not 0; aborting...",
+            scores.values().sum::<i64>()
+        );
         return None;
     }
 
