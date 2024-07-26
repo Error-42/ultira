@@ -414,19 +414,45 @@ fn dense_arbitrary(
     println!("Using a matrix, for each pair of players input the number games they played together. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j. (When i=j, this should be the number of games the player indexed i played.");
     // TODO: validate input
 
-    for i in 0..players.len() {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let values: Vec<usize> = input
-            .trim()
-            .split(' ')
-            .map(|s| s.parse().unwrap())
-            .collect();
+    let matrix: Vec<Vec<usize>> = (0..players.len())
+        .map(|_| {
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
 
-        for j in (i + 1)..players.len() {
+            let values: Vec<usize> = input
+                .trim()
+                .split(' ')
+                .map(|s| s.parse().unwrap())
+                .collect();
+
+            values
+        })
+        .collect();
+
+    assert!(players.len() >= 3);
+
+    for i in 0..players.len() - 1 {
+        for j in i + 1..players.len() {
+            if matrix[i][j] != matrix[j][i] {
+                println!("Matrix values at ({i}, {j}) and ({j}, {i}) should match, but don't. Aborting...");
+                return None;
+            }
+        }
+    }
+
+    for i in 0..players.len() {
+        if matrix[i].iter().sum::<usize>() != matrix[i][i] * 2 {
+            println!("The number of games the player indexed {i} played is not correct.");
+        }
+    }
+
+    // TODO: validate input properly. These conditions abore are necesarry, but not sufficient.
+
+    for i in 0..players.len() - 1 {
+        for j in i + 1..players.len() {
             game_collections.push(ultira::GameCollection {
                 players: [players[i].clone(), players[j].clone()],
-                game_count: values[j],
+                game_count: matrix[i][j],
             });
         }
     }
