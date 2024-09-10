@@ -381,6 +381,12 @@ fn arbitrary(path: &Path, param: Arbitrary) {
         game_collections,
     };
 
+    // BACKLOG: It would be nicer to properly validate if the graph of games can be broken up into triangles. However this should be enough to guarantee that the algorithm works.
+    if let Err(err) = arbitrary.validate_zero_sum() {
+        println!("{err} Aborting...");
+        return;
+    }
+
     let eval_before = data.evaluate();
 
     data.arbitrary(arbitrary);
@@ -407,7 +413,7 @@ fn dense_arbitrary(
     let mut game_collections = Vec::new();
 
     println!("Using a matrix, for each pair of players input the number games they played together. Let the number in the i-th row and j-th coloumn denote the number of games between players indexed i and j. (When i=j, this should be the number of games the player indexed i played.");
-    // TODO: validate input
+    // BACKLOG: don't crash on invalid input
 
     let matrix: Vec<Vec<usize>> = (0..players.len())
         .map(|_| {
@@ -440,8 +446,6 @@ fn dense_arbitrary(
             println!("The number of games the player indexed {i} played is not correct.");
         }
     }
-
-    // TODO: validate input properly. These conditions abore are necesarry, but not sufficient.
 
     for i in 0..players.len() - 1 {
         for j in i + 1..players.len() {

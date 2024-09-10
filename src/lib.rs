@@ -1,6 +1,11 @@
 #![allow(mixed_script_confusables)]
 //! Only the binary may be stable, the library cannot!
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+    fs,
+    path::Path,
+};
 
 use nalgebra::{DMatrix, DVector};
 use serde::{Deserialize, Serialize};
@@ -389,6 +394,51 @@ impl Arbitrary {
             .iter()
             .map(|game_collection| game_collection.game_count)
             .sum()
+    }
+
+    pub fn validate_zero_sum(&self) -> Result<(), String> {
+        if self
+            .scores
+            .iter()
+            .map(|(_player, score)| score)
+            .sum::<i64>()
+            != 0
+        {
+            return Err("Scores don't sum to 0.".to_string());
+        }
+
+        let mut done: HashSet<&String> = HashSet::new();
+
+        for (player, _score) in &self.scores {
+            if done.contains(player) {
+                continue;
+            }
+
+            let mut stack = vec![player];
+            done.insert(player);
+            let mut component_score = 0;
+
+            while let Some(current) = stack.pop() {
+                component_score += self.scores[current];
+
+                for game in &self.game_collections {
+                    if game.players.contains(current) && game.game_count != 0 {
+                        for neighbour in &game.players {
+                            if !done.contains(neighbour) {
+                                done.insert(neighbour);
+                                stack.push(neighbour);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if component_score != 0 {
+                return Err(format!("Connected component of players including player '{player}' has score summing to {component_score} instead of 0."));
+            }
+        }
+
+        Ok(())
     }
 }
 
