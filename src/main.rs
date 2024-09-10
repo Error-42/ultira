@@ -129,23 +129,18 @@ struct Arbitrary {
 
 // Hang on... this is basically ultira::Outcome! TODO: maybe refactor so that these two aren't different?
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Parser)]
-#[command(no_binary_name = true)]
+#[command(no_binary_name = true, disable_help_flag = true)]
 struct Score {
-    /// TODO
     player: String,
-    /// TODO
     #[arg(allow_hyphen_values = true)]
     score: i64,
 }
 
 #[derive(Debug, Parser)]
-#[command(no_binary_name = true)]
+#[command(no_binary_name = true, disable_help_flag = true)]
 struct ArbitraryGameCollection {
-    /// TODO
     player_1: String,
-    /// TODO
     player_2: String,
-    /// TODO
     games: usize,
 }
 
