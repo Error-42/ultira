@@ -180,10 +180,10 @@ impl FromArgMatches for PlayScoreArgs {
     }
 
     fn update_from_arg_matches(&mut self, matches: &clap::ArgMatches) -> Result<(), clap::Error> {
-        let Some(mut scores) = matches.get_many::<String>("scores") else {
+        let Some(mut scores) = matches.get_many::<String>("PLAYER SCORE") else {
             return Err(clap::Error::raw(
                 clap::error::ErrorKind::MissingRequiredArgument,
-                "missing ...scores",
+                "missing ...PLAYER SCORE",
             ));
         };
 
