@@ -1,6 +1,6 @@
 [package]
 name = "ultira"
-version = "2.0.0-alpha.4.0"
+version = "1.4.0-alpha.5.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4.35", features = ["serde"] }
 clap = { version = "4.5.1", features = ["derive"] }
-nalgebra = "0.32.5"
+nalgebra = "0.33.0"
 serde = { version = "1.0.197", features = ["derive"] }
 splitty = "1.0.1"
 toml = "0.8.10"
