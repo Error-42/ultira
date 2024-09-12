@@ -1,5 +1,3 @@
-// TODO: add all todos required for the git-integration preparation
-
 #![allow(confusable_idents, mixed_script_confusables)]
 
 use std::{
