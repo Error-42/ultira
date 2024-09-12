@@ -55,7 +55,7 @@ enum Command {
     ///
     /// The participants of the i-th game must be the players indexed i, i+1, and i+2 all taken modulo the number of players.
     ///
-    /// TODO: maybe allow for it to be the players to have indicies (i-1)*s+1 ... (i-1)*s+3 where s is a parameter.
+    /// BACKLOG: maybe allow for it to be the players to have indicies (i-1)*s+1 ... (i-1)*s+3 where s is a parameter.
     #[command(visible_alias = "c")]
     Circular(Circular),
     /// Evaluate rating changes after a session where all triplets of players played an equal amount of games together.
@@ -126,7 +126,7 @@ struct Arbitrary {
     sparse: bool,
 }
 
-// Hang on... this is basically ultira::Outcome! TODO: maybe refactor so that these two aren't different?
+// Hang on... this is basically ultira::Outcome! BACKLOG: maybe refactor so that these two aren't different?
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Parser)]
 #[command(no_binary_name = true, disable_help_flag = true)]
 struct Score {
@@ -170,7 +170,7 @@ struct PlayScoreArgs {
     scores: Vec<Score>,
 }
 
-// TODO: get these close to official style
+// BACKLOG: get these close to official style
 impl FromArgMatches for PlayScoreArgs {
     fn from_arg_matches(matches: &clap::ArgMatches) -> Result<Self, clap::Error> {
         let mut ret = PlayScoreArgs::default();

@@ -479,7 +479,7 @@ impl Renamable for Circular {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
-/// Must contain at least 1 player, but probably should contain at least 3. TODO: check this?
+/// Must contain at least 1 player, but probably should contain at least 3. BACKLOG: check this?
 pub struct Symmetric {
     pub date: chrono::NaiveDate,
     pub scores: HashMap<String, i64>,
