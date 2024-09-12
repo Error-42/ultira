@@ -75,10 +75,11 @@ enum Command {
     Config(Config),
     /// Undoes last command which affected history.
     ///
-    /// TODO! update this when finished developing new capabilities
-    ///
     /// These are
     /// - play
+    /// - circular
+    /// - symmetric
+    /// - arbitrary
     /// - add-player
     /// - adjust realloc
     Undo(Undo),
