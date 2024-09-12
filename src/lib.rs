@@ -295,7 +295,6 @@ impl Renamable for AddPlayer {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Session {
-    // TODO: remove?
     Play(Play),
     Arbitrary(Arbitrary),
     Circular(Circular),
@@ -343,8 +342,6 @@ pub struct Play {
     // Here, a HashMap<String, i64> would be enough. But this is kept for legacy.
     //
     // With git-integration during merge-conflicts the file may need to be manually edited.
-    //
-    // TODO: think about whether everything should use `[Outcome]` for consistency.
     pub outcomes: [Outcome; 3],
 }
 
