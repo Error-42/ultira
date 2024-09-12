@@ -442,8 +442,9 @@ fn dense_arbitrary(
     }
 
     for i in 0..players.len() {
-        if matrix[i].iter().sum::<usize>() != matrix[i][i] * 2 {
+        if matrix[i].iter().sum::<usize>() != matrix[i][i] * 3 {
             println!("The number of games the player indexed {i} played is not correct.");
+            return None;
         }
     }
 
